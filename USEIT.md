@@ -30,19 +30,28 @@ Caller speaks or types
 [Speech-to-text]  faster-whisper (English / Khmer)        (voice only)
    │
    ▼
-[Gemini agent]  picks a skill ─► load_skill ─► read_skill_file (e.g. fees.yaml)
-   │            not in a skill? ─► search_knowledge (staff-approved answers)
-   │            still unknown?  ─► log_unanswered + offer take_message
+[Router]  picks the matching skill from the question and attaches its content
+   │
    ▼
-Reply (text + spoken voice) back to the caller
+[Gemini agent]  usually answers in 1 call. Streams the words back as it writes.
+   │            no match? ─► search_knowledge (staff-approved answers)
+   │            still unknown? ─► log_unanswered + offer take_message
+   ▼
+Reply streams back; the browser speaks each sentence as soon as it is complete
 ```
 
 And this is how the agent gets smarter:
 
 ```
-Unknown question ─► review queue ─► staff write the answer on /admin ─► approved knowledge
-                                                                             │
-                     the next caller asking the same thing gets the answer ◄─┘
+Unknown question ─► review queue ─► staff click "Draft with AI" (first version)
+                                 ─► edit, pick a skill, Approve ─► approved knowledge
+                                                                       │
+                     next caller asking the same thing gets the answer ◄┘
+
+Any answer ─► caller clicks 👍 or 👎 ─► 👎 goes to the review queue with the answer
+
+Model loaded a different skill than the router picked ─► that question is remembered
+as a routing example for the right skill (automatic; staff can delete bad ones)
 ```
 
 ---
@@ -77,7 +86,7 @@ Open `.env` and set at least:
 ```powershell
 pytest
 ```
-All tests should pass. They use a fake Gemini, so they cost nothing.
+All 122 tests should pass. They use a fake Gemini, so they cost nothing.
 
 ---
 
@@ -146,12 +155,22 @@ start with `_`.
 3. If it doesn't know, it says so, logs the question for staff, and offers to take a message.
 
 ### Step 4: Staff routine on `/admin` (once or twice a day)
-1. **Questions the agent couldn't answer.** These are sorted so the most-asked come first.
-   - Fix the wording of the question if needed, write the answer, pick the skill, then **Approve**.
+1. **Questions to review.** Shown first: things the agent couldn't answer *and* answers callers
+   rated 👎 (with a note of the answer they didn't like).
+   - Click **"Draft with AI"** to get a first version written from your existing skills.
+     Returns "NOT FOUND IN SKILLS" when nothing matches, so staff know they must write it.
+   - Edit the draft, choose the right skill, then **Approve**.
    - **Dismiss** spam or off-topic questions.
-2. **Messages for staff.** Call or email the person back, then click **Mark done**.
-3. **Approved knowledge.** Edit an answer when things change (each save creates a new version),
-   or **Remove** it when it is out of date.
+2. **Approved knowledge.** Edit an answer when things change (each save creates a new version)
+   or **Remove** it. The **"Move to skill faq.md"** button writes the Q&A permanently into
+   `skills/<skill>/faq.md` and retires the DB copy; commit the skills folder to git afterwards.
+3. **Caller feedback 👎.** The 20 most-recent thumbs-down ratings, with the exact answer.
+4. **Learned routing examples.** Questions the receptionist found the right skill for on its
+   own; delete any that look wrong.
+5. **Messages for staff.** Call or email the person back, then click **Mark done**.
+6. **Speed (last 24 hours).** Median and slowest-5% latency, 👍/👎 counts, model calls per
+   answer. A rising "model calls per answer" number usually means a skill description is too
+   vague.
 
 ### Step 5: Keep information up to date
 | When this changes | Do this |
@@ -172,7 +191,8 @@ In `.env`:
 STT_ENABLED=true
 STT_MODEL_EN=small          # bigger = more accurate but slower: small, medium, large-v3-turbo
 ```
-The first voice message downloads the model, so expect a delay that one time only.
+The server loads the model at startup (`stt.warm_up()`), so the first voice message is as
+fast as the next ones. The first *download* of a Whisper model is a one-time delay.
 
 **Khmer:** stock Whisper is weak at Khmer, so use a Khmer fine-tuned model:
 ```powershell
@@ -216,9 +236,20 @@ Put an HTTPS reverse proxy (Caddy or Nginx) in front, and set `ENVIRONMENT=produ
 ### 5.3 Tune how Gemini behaves
 | Setting / file | Effect |
 |---|---|
-| `GEMINI_MODEL` in `.env` | `gemini-3.8-flash` (default) balances speed and quality. A `-lite` model is cheaper; test it with section 6.2 before switching. |
+| `GEMINI_MODEL` in `.env` | Main model (default `gemini-3.8-flash`). |
+| `GEMINI_MODEL_FAST` | Fast model used when the router found a skill (default `gemini-3.5-flash-lite`, ~1.5 s). |
+| `GEMINI_FALLBACK_MODEL` | Used when the main one is overloaded (default `gemini-3.6-flash`). |
+| `THINKING_LEVEL` | `low` (default) is right for fact look-ups. Raise to `medium` only for multi-step workflows. |
+| `LLM_TIMEOUT_MS`, `LLM_RETRY_ATTEMPTS` | Per-call timeout and SDK retries on 408/5xx (429 is not retried). |
+| `ROUTER_THRESHOLD` (default 0.65), `ROUTER_MARGIN` (0.03) | Raise if the router picks wrong skills; lower if it misses. |
+| `ROUTER_BUNDLE_MAX_BYTES` (8000) | How much skill content gets attached to a routed question. |
+| `KNOWLEDGE_THRESHOLD` (0.85) | How close an approved answer must be to the caller's question to be used directly. |
+| `SUMMARIZE_AFTER_TURNS` (10), `MAX_HISTORY_TURNS` (40) | When to compact a long chat into a summary, and the hard safety cap. |
 | `src/receptionist/agent/prompts.py` | Tone, reply length, safety rules. Change one thing at a time and re-test (section 6). |
-| `MAX_HISTORY_TURNS`, `AGENT_MAX_TOOL_ROUNDS` | Memory length and the tool-call limit per answer. |
+
+> 🔎 **Free-tier Gemini is unreliable.** The free key hits `429 quota exceeded` quickly, and
+> the same request can take 2 s one minute and 18 s the next. Enable billing in Google AI
+> Studio for real speed and so your conversations are not used to train models.
 
 ### 5.4 Better Khmer
 - Collect 20-50 real (anonymised) voice messages and compare STT models (section 6.3).
@@ -247,13 +278,24 @@ knowledge or other people's data.
 
 ### 6.1 Automatic tests (run after every change)
 ```powershell
-pytest                                  # behaviour (fake Gemini; free)
-ruff check src tests                    # code style and common bugs
+pytest                                  # 122 tests (fake Gemini; free)
+ruff check src tests scripts            # code style and common bugs
 bandit -c pyproject.toml -r src         # security static analysis
 python -m pip_audit                     # known-vulnerable packages
 pre-commit install                      # runs these on every git commit
 ```
 All must pass before you deploy.
+
+### 6.1b Live evaluation (uses your Gemini quota)
+`tests/evals/questions.yaml` has 18 real questions (English and Khmer, including
+unknown-topic and prompt-injection cases) with the expected skill and the facts the answer
+must contain. Run them against the real model:
+```powershell
+$env:PYTHONIOENCODING = "utf-8"
+.venv\Scripts\python scripts\run_eval.py --delay 3
+```
+A JSON + Markdown report is written to `reports\` (git-ignored). `--delay 3` means 3 s
+between questions; raise it if the free tier is 429-ing.
 
 ### 6.2 Answer-quality test (real Gemini)
 Make a list of 30-50 real questions with the **correct** answer next to each, in both languages.
@@ -355,12 +397,16 @@ If any row fails, treat it as a bug and add a test for it in `tests/` so it can'
 | I want to change... | File |
 |---|---|
 | School facts | `skills/<skill>/SKILL.md` and its data files |
+| Step-by-step tasks (campus tour etc.) | `skills/<skill>/workflow.yaml` |
 | Agent personality and rules | `src/receptionist/agent/prompts.py` |
+| How older turns are summarised | `src/receptionist/agent/memory.py` |
 | Agent tools (abilities) | `src/receptionist/agent/tools.py` |
 | Settings and limits | `.env` (all options are listed in `.env.example`) |
-| Chat page look and behaviour | `web/index.html`, `web/style.css`, `web/js/app.js` |
-| Admin page | `web/admin.html`, `web/js/admin.js` |
+| Router behaviour | `src/receptionist/router/service.py`, `router/embeddings.py`, `router/lexical.py` |
+| Chat page (streaming, 👍/👎, voice) | `web/index.html`, `web/style.css`, `web/js/app.js` |
+| Admin page (drafts, export, speed panel) | `web/admin.html`, `web/js/admin.js` |
 | Speech-to-text | `src/receptionist/voice/stt.py` |
 | Text-to-speech provider | `src/receptionist/voice/tts.py` |
 | Security headers and limits | `src/receptionist/security/` |
+| Export to `faq.md` | `src/receptionist/admin/export.py` |
 | Offices you can leave messages for | `OFFICES` in `src/receptionist/messages/models.py` |

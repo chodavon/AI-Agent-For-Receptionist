@@ -226,3 +226,336 @@ Open these spots first. Line numbers are from the current code.
   to be 3. Also check that the first words appear in under 1 s in the browser.
 - Security: the prompt-injection tests in USEIT 6.4 must still pass. Content inserted by the
   router stays in the user turn, marked as data.
+
+---
+
+# Appendix A: Fix the live-test slowness (2026-10-13)
+
+Added after a live test showed answers taking 18–34 s. Three stacking causes were
+identified from the server log — none of them was a code bug.
+
+**Status: ⏳ Not started. Priority: high.**
+
+## A.1 Fill the skills with real school data (biggest fix)
+
+**Symptom:** router logs `route None score=0.66 via none` and `score=0.73 via none`,
+even though the score is above the 0.65 threshold. The second-best skill is within
+0.03, so the router refuses to guess, and the agent falls through to the slow
+`path=tools` branch (main model + full tool loop + no attached content).
+
+**Why:** every data file in `skills/` is still full of placeholder TODOs
+(`fee: "TODO: e.g. 600 USD per year"`, 14 TODOs in `calendar.yaml`, etc.). Every
+skill looks about the same to the embedder, so no skill wins by a clear margin.
+
+**Fix (no code, just content), in order of impact:**
+1. Replace all TODOs in `skills/fees-and-payments/fees.yaml` with real prices,
+   terms and discounts.
+2. Replace all TODOs in `skills/admissions/` (requirements, timeline, documents).
+3. Replace all TODOs in `skills/campus-and-contact/` (address, phone, hours).
+4. Replace all TODOs in `skills/class-schedule/`, `academic-calendar/`.
+5. Delete any skill folder for things the school does not offer, e.g. remove
+   `skills/transport/` if there is no school bus. An unused skill still competes
+   in routing and dilutes margins.
+6. For each skill, add 3–8 `## question` headings to its `faq.md`, in **both
+   English and Khmer**, matching how parents actually ask. These headings double
+   as routing examples (see `src/receptionist/skills/loader.py:example_questions`).
+7. On `/admin`, click **Reload skills** after each batch. Then ask real questions
+   and watch the log line: `route <skill> score=0.8x via embedding` means the
+   fast path kicked in.
+
+**Verify:** p50 `turn_metrics.total_ms` should drop from the 18–34 s seen
+tonight to under 3 s on routed questions (as measured on 2026-10-10: Grade 7
+tuition = 1.7 s).
+
+## A.2 Deal with free-tier Gemini 503s
+
+**Symptom:** `POST .../gemini-3.8-flash:streamGenerateContent HTTP/1.1 503` on
+nearly every call, followed by a retry that either succeeds after ~15 s or
+times out at 20 s and falls back to `gemini-3.6-flash`.
+
+**Why:** the free Gemini tier has one capacity pool for everyone; demo projects
+are first to be throttled. The code already handles it (retry + fallback +
+60-s circuit breaker), but each failed attempt still costs ~15 s wall-clock.
+
+**Fixes, in priority order:**
+- [ ] **Enable billing on the Gemini key.** Paid-tier capacity pool is
+      separate; the 503s stop. It is also required for privacy — on the free
+      tier Google may use prompts to train models.
+- [ ] If paid is not possible yet, shorten `LLM_TIMEOUT_MS` from 20000 to
+      **8000**, so a hung call falls to the fallback model after 8 s instead
+      of 20. Add to `.env`.
+- [ ] After the paid tier is on, swap the default main model to a paid-tier
+      endpoint if Google publishes a separate id (track in `docs/RESEARCH.md`).
+
+## A.3 Turn on voice input
+
+**Symptom:** three `POST /api/transcribe HTTP/1.1 503 Service Unavailable`
+before the first chat message. Voice is dead.
+
+**Fix:**
+- [ ] `pip install -e ".[voice]"`
+- [ ] In `.env`: `STT_ENABLED=true`
+- [ ] Optional: `STT_MODEL_KM=./models/whisper-km` for Khmer (see README).
+
+## A.4 Lower the router margin if A.1 is not enough
+
+If, after real content is in, questions still log `via none` with scores above
+0.65:
+- [ ] Lower `ROUTER_MARGIN` from `0.03` to `0.01` in `.env`.
+- [ ] Re-run `scripts/run_eval.py` and confirm accuracy did not drop.
+
+## A.5 Acceptance test for Appendix A
+- [ ] `turn_metrics` p50 total_ms < 3000 on routed questions.
+- [ ] `path=tools` turns < 20 % of all turns over a 24-hour window
+      (`/api/admin/metrics` → `by_path`).
+- [ ] Zero 503 "high demand" errors over 50 consecutive calls once paid is on.
+
+---
+
+# Appendix B: Research-backed next steps (2026-10-13)
+
+Research gathered from vendor guides, academic papers and production
+engineering blogs. Findings and sources are logged in `docs/RESEARCH.md`.
+The implementation tasks they create are below.
+
+**Status: ⏳ Not started. Priority: medium — do not start until Appendix A is
+done, otherwise the gains are hidden by free-tier noise.**
+
+## B.1 Hybrid retrieval with Reciprocal Rank Fusion (RRF)
+
+**Finding:** the 2026 consensus for FAQ retrieval is **BM25 + dense
+embeddings + RRF**, not one or the other. Hybrid consistently adds 5–15 %
+recall over either method alone, because BM25 catches rare terms and codes
+("Grade 7", "ADM-2024") while embeddings catch paraphrases ("how much do you
+charge" vs "fees"). RRF avoids fragile score calibration.
+
+**What we have today:** lexical IDF (`router/lexical.py`) and embeddings
+(`router/embeddings.py`) exist, but the router picks one of them, it does
+not fuse their rankings. Same for `router/knowledge.py`.
+
+**Tasks:**
+- [ ] Add `router/fusion.py` with
+      `rrf(ranked_lists, k=60) -> list[(skill, rrf_score)]`.
+- [ ] Rewrite `SkillRouter.route()` to call both lexical and embeddings in
+      parallel (`asyncio.gather`), then fuse. Keep the shortcut and
+      follow-up rules.
+- [ ] Same change in `KnowledgeMatcher.match()`.
+- [ ] Replace plain IDF with BM25 scoring in `router/lexical.py` (port
+      `rank_bm25.BM25Okapi` or add it as a dep).
+- [ ] Tests: add 10 cases to `tests/evals/questions.yaml` that only one
+      method answers (an exact-code lookup, a paraphrase of a rare term),
+      and assert hybrid gets both.
+
+## B.2 Cross-encoder reranker over top-K
+
+**Finding:** production RAG blogs recommend a reranker (cross-encoder or an
+LLM-as-judge in lite mode) over the top-K hybrid candidates. Typical lift:
+another 5–15 % recall and much wider margins — fewer "ambiguous" cases like
+tonight's `via none`.
+
+**Tasks:**
+- [ ] Add `router/rerank.py`: given a question and up to 10 candidate skills
+      with their bundled text, call the fast model (`gemini-3.5-flash-lite`)
+      with a one-shot prompt and `response_schema={skill: str, score: float}`
+      to pick the best one. Low thinking level, short output.
+- [ ] Only call the reranker when the top-2 margin after RRF is thin
+      (< 0.05). Skip on obvious wins.
+- [ ] Guard with `ROUTER_RERANK=true` (default off until measured).
+- [ ] Measure with `scripts/run_eval.py`: rerank should raise routing
+      accuracy from 18/19 to 19/19 on the current eval set, with ≤ 300 ms
+      extra on reranker-triggered turns.
+
+## B.3 Semantic answer cache (7x speed-up on cache hits)
+
+**Finding:** semantic caching of final LLM answers cuts median cost
+40–70 % and latency from ~850 ms to ~120 ms on hits in vendor benchmarks
+(Redis, Portkey). Key is the **question embedding**, not the raw text, so
+paraphrases of a FAQ hit the cache.
+
+**What we have today:** `router/knowledge.py` matches admin-approved
+answers, which still go through the LLM. This is not a cache.
+
+**Tasks:**
+- [ ] New table `answer_cache(question_embedding BLOB, answer TEXT,
+      skill TEXT, lang TEXT, hits INT, created_at)` with 24-h TTL.
+- [ ] On every answered turn where no tool failed and no `log_unanswered`
+      fired, upsert into the cache.
+- [ ] Before routing, if an embedding match ≥ 0.95 cosine exists, return
+      the cached answer directly (still through the SSE path, so the UI
+      does not know). Record `path=answer_cache` in `turn_metrics`.
+- [ ] **Safety:** flush on `skills.reload()`, on knowledge update/delete,
+      and on an approved 👎 feedback for the same skill.
+- [ ] Admin: show cache hit rate on the speed panel.
+
+## B.4 Explicit prompt caching with controlled boundaries
+
+**Finding:** naive "cache the whole prompt" can **increase** TTFT because
+small per-request changes bust the cache. The right boundary is: cache the
+stable prefix (system prompt + skills index + fixed tool definitions), but
+NOT the per-request skill bundle, user text or recent summary. Published
+gains: 13–31 % TTFT drop, 41–80 % cost drop.
+
+**Tasks:** (restates `need-improve.md` 16.2 with specifics)
+- [ ] Build one `client.caches.create(ttl='3600s')` cache per
+      `(school_name, skills.version)`; store its id on the registry.
+- [ ] On every `generate_content_stream`, pass `cached_content=` only for
+      the stable prefix. Per-request content (reference bundle, user turn)
+      stays uncached.
+- [ ] Delete old caches on `SkillRegistry.reload()`.
+- [ ] Report `cached_content_token_count` in `turn_metrics`. Target: more
+      than 60 % of input tokens cached after the first turn.
+
+## B.5 Observability and tracing (Langfuse or OpenTelemetry)
+
+**Finding:** every 2026 production voice-agent article lists tracing +
+eval loop as the number-one production gap. Tonight's log is one line per
+turn — we cannot see which skill texts were attached, which chunks were
+fused, which rerank candidates were considered.
+
+**Tasks:**
+- [ ] Choose: Langfuse (self-hostable, free, Python SDK) vs OpenTelemetry +
+      a free collector. Recommend Langfuse for the smaller surface.
+- [ ] Trace every turn as `span(name="turn")` with child spans for
+      `router.lexical`, `router.embedding`, `router.rerank`, `llm.stream`,
+      `tool.<name>`. Record token counts and latencies on each.
+- [ ] Hook into `TurnStats` so no code is duplicated.
+- [ ] Gate with `TRACING_ENABLED=false` by default.
+
+## B.6 Evaluation loop with simulated callers
+
+**Finding:** real-world eval of voice/chat agents uses **simulated users**
+(an LLM playing a parent) that drive multi-turn conversations, not
+single-turn Q&A. Our `scripts/run_eval.py` is one-shot — it misses workflow
+regressions (campus-tour booking), clarification dialogues, and
+barge-in-equivalent interruptions.
+
+**Tasks:**
+- [ ] Extend `tests/evals/` with YAML "scenarios": a list of persona turns
+      and an expected end-state (message saved? skill loaded? apology given?).
+- [ ] Add `scripts/run_scenarios.py` that drives the agent with a second
+      Gemini session as the simulated caller, scored by a third LLM-judge
+      against the acceptance criteria.
+- [ ] Target scenarios: happy fee question, unknown-topic + fallback,
+      campus-tour workflow, prompt-injection attempt, mixed EN/KM in one
+      session, angry caller, interrupted booking.
+- [ ] Report routing hit rate, task-completion rate and p50/p95 latency
+      per scenario.
+
+## B.7 Formalise the guardrails layer (input → plan → tool → output)
+
+**Finding:** production agent blueprints (OpenAI, Maxim, Vapi) describe a
+four-stage guardrail layer: **input** (PII redact, length cap, language
+detect), **plan** (tool allow-list, budget check), **tool** (per-tool
+validation and timeout), **output** (fact-check against tool results, PII
+redact, safe-text check).
+
+**What we have today:** input validation, tool `strict:true` schemas, UI
+`textContent` only. We do not have an **output fact-check** that compares
+numbers in the reply to numbers the tool returned
+(`need-improve.md` 12), and we do not have a central `guardrails.py`.
+
+**Tasks:**
+- [ ] Extract `src/receptionist/agent/guardrails.py` with four stages;
+      wire it into `agent/client.py:stream()`.
+- [ ] Numeric fact-check: parse `[0-9][0-9,.]*` tokens in the reply;
+      every one must appear in a reference bundle OR a tool result from
+      this turn, else flag and hold.
+- [ ] Per-session budget: hard-cap LLM calls per session at e.g. 20,
+      replying "Let me pass you to the office" after that.
+- [ ] Tests: inject a reply containing a fabricated price → assert the
+      guardrail blocks it.
+
+## B.8 Conversation-design patterns from the voice-UX literature
+
+**Finding (IBM, Voiceflow, Botpress 2026):**
+(a) **progressive information collection** — one question at a time, confirm,
+save (our `workflow.yaml` already does this; extend it);
+(b) **guided choice** — 2–4 quick-reply buttons after an open question
+(completion rate +20 %);
+(c) **inline confidence hints** when a match is weak ("I'm not sure, but I
+think you're asking about …");
+(d) **source citations** — "from the fees skill, last updated 2026-10-03".
+
+**Tasks:**
+- [ ] Add quick-reply buttons to `web/js/app.js`: the SSE `done` event can
+      include `{suggestions: [...]}` which the UI renders as clickable chips.
+- [ ] When the router's top score is between 0.5 and 0.65 (ambiguous), the
+      agent asks a disambiguating question ("Do you mean tuition fees, or
+      application fees?") instead of guessing.
+- [ ] After every answer, add a line in the UI like
+      `From "fees-and-payments" · updated 2026-10-03` (data already in the
+      registry).
+- [ ] Add workflows for: "leave a message", "book a parent-teacher meeting",
+      "report an absence". Same `workflow.yaml` pattern as
+      `admissions/book_campus_tour`.
+
+## B.9 Multi-model LLM routing
+
+**Finding:** the Redis "LLM router" pattern routes each question to the
+smallest model that can handle it: trivial greetings to a nano model, FAQ
+to lite, reasoning to full. We have fast/main/fallback, but it is a
+*failover* chain, not a *skill-based* chooser.
+
+**Tasks:**
+- [ ] Add `agent/model_selector.py:choose(route, has_workflow, lang)`:
+  - routed FAQ, no workflow → fast
+  - workflow or no route → main
+  - KM detected and the fast model is weak at KM → main
+- [ ] Measure for a week with the eval scenarios before changing defaults.
+
+## B.10 Priority order for Appendix B
+1. **B.1 (hybrid + RRF)** — fixes exactly the "margin too thin" case we hit
+   tonight. Highest ROI.
+2. **B.2 (reranker)** — removes almost all remaining router misses.
+3. **B.3 (answer cache)** — repeat FAQ questions become instant.
+4. **B.5 (tracing)** — without this we cannot tune B.1/B.2/B.3 safely.
+5. **B.6 (scenario evals)** — proves the above do not regress.
+6. **B.4 (explicit caching)** — biggest cost win once traffic grows; needs
+   the paid tier (A.2) to pay off.
+7. **B.7 (guardrails module)** — security/correctness, not speed.
+8. **B.8 (UX patterns)** — quality of experience.
+9. **B.9 (model selector)** — polish; depends on paid-tier capacity data.
+
+## B.11 Verification for every Appendix-B item
+- `pytest` stays green.
+- `scripts/run_eval.py` and `scripts/run_scenarios.py` (new, B.6) must not
+  regress accuracy and must show the claimed latency win.
+- Appendix A must be fully done first, otherwise free-tier noise hides
+  every signal.
+- Every change updates `docs/RESEARCH.md` with the source URL and the
+  measured outcome.
+
+---
+
+## Sources (research done 2026-10-13)
+Full source list is in `docs/RESEARCH.md`. Highlights:
+
+- *How to Build an AI Receptionist: A Complete Guide (2026)* — getvoip.com
+- *How AI Receptionists Work: Architecture, Performance, and What CTOs Need
+  to Know* — snsys.ai
+- *Conversational AI Design in 2026 (According to Experts)* — botpress.com
+- *Conversational AI Design: A Practitioner's Guide [2026]* — voiceflow.com
+- *How to Optimize Pipecat Voice Agent Latency in 2026: 12 Techniques* —
+  futureagi.com
+- *Workload-Router-Pool Architecture for LLM Inference Optimization (vLLM
+  Semantic Router)* — arXiv 2603.21354
+- *LLM router architecture: best practices for 2026* — redis.io
+- *Reduce LLM Cost and Latency: A Comprehensive Guide for 2026* —
+  getmaxim.ai
+- *BM25 Wins at Scale: A Scaling Study of RAG Paradigms* — arXiv 2607.26497
+- *Hybrid Search for RAG: Combining BM25 and Dense Vector Search (2026
+  Guide)* — denser.ai
+- *RAG Best Practices for Enterprise AI (Chunking, Embeddings, Reranking,
+  Hybrid)* — stackai.com
+- *RAG Explained: 10 Steps to Production-Ready RAG in 2026* —
+  decodethefuture.org
+- *Voice AI Observability for Vapi: A 2026 Implementation Guide* —
+  futureagi.com
+- *How to Evaluate Voice AI Agents End-to-End: A 2026 Methodology* —
+  futureagi.com
+- *Observability and Evaluation Strategies for Tool-Calling AI Agents* —
+  getmaxim.ai
+- *fastapi-langgraph-agent-production-ready-template* — github.com/wassim249
+- *OpenAI voice agents guide* — developers.openai.com
+- *Don't Break the Cache: An Evaluation of Prompt Caching for Long-Horizon
+  Agentic Tasks* — arXiv 2601.06007
