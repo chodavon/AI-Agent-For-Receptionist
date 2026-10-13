@@ -5,6 +5,10 @@ services:
     environment:
       ENVIRONMENT: production
       STT_ENABLED: "true"
+      # Pin the DB to the mounted volume: the root filesystem is read-only, so a
+      # relative path (e.g. ./receptionist.db from .env) would crash init_db().
+      DATABASE_URL: sqlite:////app/data/receptionist.db
+      HF_HOME: /app/models
     ports:
       # Bind to localhost only; put an HTTPS reverse proxy (Caddy/Nginx) in front.
       - "127.0.0.1:8000:8000"
