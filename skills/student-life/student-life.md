@@ -1,29 +1,32 @@
-# Student life details
+# Student life at AICA
 
-Replace every TODO.
+## Class activities and events
+- The homepage gallery ("AICA Life") shows 11 photos from training sessions, bootcamps, and workshops.
+- Activities appear to include hands-on cybersecurity labs, AI coding sessions, and group exercises.
+- Events are not listed on a public calendar as of 2026-10-13.
 
-## Clubs and activities
-| Club | What it does | When it meets |
-|---|---|---|
-| TODO: e.g. Coding club | TODO | TODO |
-| TODO: e.g. Cybersecurity / CTF club | TODO | TODO |
+## Workshops
+- The Workshops page (https://www.aicacademy.ai/en/workshops) currently shows **0 workshops**.
+- Description: "Hands-on programmes in AI, cybersecurity, and governance for working professionals."
+- Check back later for new dates, or contact admin@aicacademy.ai.
 
-## Uniform / dress code
-- TODO: e.g. white shirt with school logo, dark trousers or skirt
-- Where to buy: TODO
-- Price: TODO (or say "see fees-and-payments")
+## Community
+- AICA describes itself as "a learning community focused on quality courses, skilled instructors, and students who are ready to grow."
+- Social media channels for community updates:
+  - Facebook: https://www.facebook.com/profile.php?id=61575360064929
+  - TikTok: https://www.tiktok.com/@aica_academy
+  - Instagram: https://www.instagram.com/ai_cyber_academy
+  - Telegram: https://t.me/aica_officialcambodia
 
-## Canteen
-- Opening hours: TODO
-- Payment: TODO (cash / KHQR)
+## Dress code / uniform
+Not published on website as of 2026-10-13.
 
 ## Student ID card
-- How to get one: TODO
-- Lost card replacement: TODO
+Not published on website as of 2026-10-13.
 
-## Key rules
-- TODO: e.g. attendance rule (minimum % of classes)
-- TODO: e.g. no smoking on campus
+## Canteen / food
+Not published on website as of 2026-10-13. The campus is in the Phsar Thmey area, which has many food options nearby.
 
-## Student support
-- Counselling / help desk: TODO (where, when)
+## Sources
+- https://www.aicacademy.ai/en (accessed 2026-10-13)
+- https://www.aicacademy.ai/en/workshops (accessed 2026-10-13)

@@ -1,20 +1,22 @@
 ---
 name: transport
-description: School bus or shuttle routes, pick-up points and times, transport fees, how to register for the bus, and how to get to campus by public transport, tuk-tuk, motorbike or car. ឡានក្រុងសាលា ការធ្វើដំណើរ ផ្លូវមកសាលា.
+description: How to get to the AICA campus — directions, nearby landmarks, tuk-tuk, parking, public transport. ការធ្វើដំណើរ ផ្លូវមកសាលា ចំណតរថយន្ត។
+triggers: [directions, how to get, transport, tuk-tuk, parking, bus, motorbike, landmark, central market, phsar thmey]
+last_updated: 2026-10-13
+source: https://www.aicacademy.ai/en/contact
 ---
 
 # Transport
 
-> TODO: fill in with your academy's real information. Any line still marked TODO is unknown:
-> say you don't have that detail yet, call log_unanswered, and offer to take a message
-> for the front office. Never guess times.
-> If the academy has no school bus, replace this section with "The academy does not run a
-> school bus" and keep the "getting here" part.
+## Quick answers
+- AICA is at **#5A-5B Street 114, Phsar Thmey 1, Daun Penh, Phnom Penh**.
+- Nearest landmark: **Phsar Thmey (Central Market)** — the campus is in the Phsar Thmey 1 area.
+- Google Maps: https://maps.app.goo.gl/Qk3uLfZ5UxW3Fnx5A?g_st=ipc
+- AICA does **not** run a school bus or shuttle.
 
 ## How to answer
-- Routes, stops, times and fees are in `routes.yaml`. Read it before giving any time or price.
-- For the campus address and map, use the campus-and-contact skill.
+- Read `routes.yaml` for getting-here details.
+- For the campus address and office hours, use the campus-and-contact skill.
 
 ## When to hand off
-- A late bus, lost items on the bus, or a change of pick-up point: take a message for the
-  front office.
+- Traffic or road-specific questions: suggest they use Google Maps.

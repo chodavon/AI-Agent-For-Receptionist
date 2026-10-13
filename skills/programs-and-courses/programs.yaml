@@ -1,17 +1,276 @@
-# TODO: replace with your real programs. Copy the block below once per program.
-# Keep the indentation with spaces (never tabs).
-programs:
-  - name: "TODO: program name (e.g. Bachelor of Computer Science)"
-    name_km: "TODO: Khmer name"
-    level: "TODO: bachelor / associate / short course / certificate"
-    duration: "TODO: e.g. 4 years"
-    language_of_instruction: "TODO: English / Khmer"
-    schedule: "TODO: e.g. weekday mornings, or evening 17:30-20:30"
-    entry_requirements:
-      - "TODO: e.g. high school diploma (grade 12 certificate)"
-      - "TODO: e.g. placement test in Math and English"
-    main_subjects:
-      - "TODO"
-    career_paths:
-      - "TODO: e.g. software developer, network engineer"
-    intake: "TODO: e.g. October each year"
+currency: USD
+
+tracks:
+  - name: Artificial Intelligence
+    courses: 13
+  - name: Cyber Security
+    courses: 1
+  - name: GRC & Data Protection
+    courses: 4
+
+courses:
+  # ── ON SPECIAL — starts October 19, 2026 ──
+
+  - name: "Certified Ethical Hacker (C|EH) v13"
+    slug: certified-ethical-hacker
+    track: Artificial Intelligence
+    certification_body: EC-Council
+    duration: "40 hours"
+    price: 500
+    status: "On Special"
+    start_date: "2026-10-19"
+    series: Practitioner
+    prerequisites: "Not stated on website"
+    description: "Professional cybersecurity program — ethical hacking, security assessment, attack techniques, defence across networks, apps, cloud, wireless, mobile, IoT."
+    topics:
+      - Ethical hacking fundamentals
+      - Footprinting and reconnaissance
+      - Network scanning and enumeration
+      - Vulnerability analysis
+      - System and network security
+      - Social engineering
+      - Web server and web application security
+      - Wireless and mobile security
+      - IoT, OT, and cloud security
+      - Cryptography
+
+  - name: "Certified Cybersecurity Technician (C|CT)"
+    slug: certified-cybersecurity-technician
+    track: Artificial Intelligence
+    certification_body: EC-Council
+    duration: "40 hours"
+    price: 400
+    status: "On Special"
+    start_date: "2026-10-19"
+    series: Practitioner
+    prerequisites: "Not stated on website"
+    description: "Entry-level cybersecurity — hands-on labs, threat identification, system protection, security monitoring, incident response."
+    topics:
+      - Information security threats and vulnerabilities
+      - Network security fundamentals
+      - Authentication and authorization
+      - Security assessment techniques
+      - Application, cloud, wireless, mobile, IoT, OT security
+      - Cryptography and data security
+      - Network traffic and log monitoring
+      - Incident response and forensics
+      - Business continuity and disaster recovery
+
+  - name: "Artificial Intelligence Essentials"
+    slug: artificial-intelligence-essentials
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "16 hours"
+    price: 200
+    status: "On Special"
+    start_date: "2026-10-19"
+    series: Practitioner
+    prerequisites: "Not stated on website"
+    description: "Foundational AI literacy — how AI works, AI tools, machine learning, generative AI, prompt crafting, AI ethics."
+    topics:
+      - AI fundamentals and evolution
+      - AI tools and real-world applications
+      - Machine learning, neural networks, NLP, generative AI
+      - Prompt crafting fundamentals
+      - Evaluating AI-generated content
+      - AI ethics, privacy, security, responsible use
+
+  - name: "Certified AI Solution Practitioner (CASP)"
+    slug: certified-ai-solution-practitioner
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "40 hours"
+    price: 400
+    status: "On Special"
+    start_date: "2026-10-19"
+    series: Practitioner
+    prerequisites: "Not stated on website"
+    description: "Hands-on — design, develop, test and deploy AI solutions. Computer vision, LLMs, agent development, production deployment."
+    tools: "Python, Roboflow, YOLO, OpenAI models, Streamlit, Agentic AI frameworks"
+    topics:
+      - AI solution architecture
+      - Computer vision
+      - Large language models (LLMs)
+      - Agent development
+      - Deploying production-ready AI applications
+
+  # ── COMING SOON — dates TBA ──
+
+  - name: "Building AI Agents — Foundation"
+    slug: building-ai-agents-foundation
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Advanced Practitioner
+    prerequisites: "Not stated on website"
+    description: "Agentic AI — autonomous systems that plan, use tools, complete multi-step tasks. Agent architectures, MCP tool integration, memory systems, safety guardrails."
+
+  - name: "Responsible AI & AI Governance Foundation"
+    slug: responsible-ai-ai-governance-foundation
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Foundation
+    prerequisites: "Not stated on website"
+    target_audience: "Compliance, risk, legal, and strategy professionals"
+    description: "Responsible AI deployment, bias, safety, governance frameworks. Aligned with ASEAN Guide on AI Governance & Ethics (2024)."
+
+  - name: "Generative AI for HR Professionals"
+    slug: generative-ai-for-hr-professionals
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Foundation
+    prerequisites: "Not stated on website"
+    target_audience: "HR professionals"
+    description: "Using generative AI in recruitment, L&D, policy drafting, employee experience, people analytics. Emphasis on fairness, privacy, legal considerations."
+
+  - name: "AI for Leaders & Executives"
+    slug: ai-for-leaders-executives
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Executive Leadership
+    prerequisites: "Not stated on website"
+    target_audience: "C-suite executives, board directors, senior decision-makers"
+    description: "Strategic AI deployment — opportunity mapping, governance, risk, ROI frameworks, vendor selection. Leadership focus, not technical mechanics."
+
+  - name: "Generative AI for Workplace Productivity"
+    slug: generative-ai-for-workplace-productivity
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Foundation
+    prerequisites: "Not stated on website"
+    target_audience: "All professionals (role-agnostic)"
+    description: "Using ChatGPT, Claude, Copilot, Gemini for writing, research, analysis, presentations, email, meeting prep, document workflows."
+
+  - name: "Master Prompt Engineering — Foundation"
+    slug: master-prompt-engineering-foundation
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Foundation
+    prerequisites: "Not stated on website"
+    description: "Prompt engineering for ChatGPT, Claude, Gemini. Structured prompting, role framing, context control, output shaping for business tasks."
+
+  - name: "Master Prompt Engineering — Advanced"
+    slug: master-prompt-engineering-advanced
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Advanced Practitioner
+    prerequisites: "Professionals already using AI daily"
+    description: "Chain-of-thought, multi-step reasoning, retrieval-augmented workflows, prompt chaining, evaluation frameworks, responsible-use patterns."
+
+  - name: "Vibe Code with AI: From Prompt to Production — Foundation"
+    slug: vibe-code-with-ai-from-prompt-to-production-foundation
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Foundation
+    prerequisites: "No prior coding experience required"
+    target_audience: "Non-developers and aspiring builders"
+    description: "AI-assisted software development using Claude and Cursor. From idea to working prototype — natural-language specs, iterative refinement, basic testing."
+
+  - name: "Vibe Code with AI: From Prompt to Production — Advanced"
+    slug: vibe-code-with-ai-from-prompt-to-production-advanced
+    track: Artificial Intelligence
+    certification_body: AICA
+    duration: "2 days"
+    price: 200
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Practitioner
+    prerequisites: "Not stated on website"
+    target_audience: "Developers and technical professionals"
+    description: "Shipping AI-assisted code to production — agentic coding workflows, MCP integration, test generation, code review automation, security review, deployment."
+
+  - name: "CyberResilience for Management and Leaders"
+    slug: cyberresilience-for-management-and-leaders
+    track: Cyber Security
+    certification_body: AICA
+    duration: "1 day"
+    price: null
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Management Leadership
+    prerequisites: "Not stated on website"
+    target_audience: "Management and senior leaders"
+    description: "Organisational cyber resilience — business risk, governance, board accountability, Cambodia's Law on Cybersecurity 2024, incident response leadership, business continuity."
+
+  - name: "Data Protection Impact Assessment (DPIA) Workshop"
+    slug: data-protection-impact-assessment-dpia-workshop
+    track: GRC & Data Protection
+    certification_body: AICA
+    duration: "1 day"
+    price: null
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Practitioner Specialist
+    prerequisites: "Not stated on website"
+    target_audience: "DPOs and compliance professionals"
+    description: "Hands-on DPIA workshop under LPDP 2025 — triggers, risk assessment, stakeholder consultation, mitigation, documentation. Outcome: a completed DPIA."
+
+  - name: "Certified DPO for Cambodia (LPDP)"
+    slug: certified-dpo-for-cambodia-lpdp
+    track: GRC & Data Protection
+    certification_body: AICA
+    duration: "4 days"
+    price: null
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Practitioner
+    prerequisites: "Not stated on website"
+    target_audience: "Appointed and aspiring Data Protection Officers"
+    description: "AICA's flagship DPO credential under Cambodia's LPDP 2025. Capstone of the data protection pathway. Programme leadership, governance architecture, regulator engagement, breach command, board advisory, privacy culture."
+
+  - name: "Practitioner Certificate for Laws on Personal Data Protection (LPDP 2025)"
+    slug: practitioner-certificate-for-laws-on-personal-data-protection-lpdp-2025
+    track: GRC & Data Protection
+    certification_body: AICA
+    duration: "3 days"
+    price: null
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Practitioner
+    prerequisites: "Not stated on website"
+    target_audience: "Compliance officers, legal counsel, senior operations leaders"
+    description: "Implementing LPDP 2025 — policy design, data mapping, DPIAs, consent architecture, breach handling, cross-border transfer. Practitioner-level assessment. Pathway to the Certified DPO credential."
+
+  - name: "LPDP Awareness for All Employees"
+    slug: lpdp-awareness-for-all-employees
+    track: GRC & Data Protection
+    certification_body: AICA
+    duration: "1 day"
+    price: null
+    status: "Coming Soon"
+    start_date: "To be announced"
+    series: Foundation
+    prerequisites: "Not stated on website"
+    target_audience: "All employees in organisations handling personal data"
+    description: "Cambodia's LPDP awareness — what it is, why it matters, personal obligations, how to handle data correctly."

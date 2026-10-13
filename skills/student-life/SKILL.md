@@ -1,19 +1,26 @@
 ---
 name: student-life
-description: Student clubs and activities, sports, competitions and hackathons, canteen and food, uniform and dress code, student ID card, student rules and code of conduct, student support and counselling. ក្លឹប សកម្មភាពសិស្ស ឯកសណ្ឋាន អាហារដ្ឋាន បទបញ្ជាផ្ទៃក្នុង.
+description: Workshops, bootcamps, class activities, community events, student experience at AICA. សកម្មភាពសិស្ស វគ្គបណ្ដុះបណ្ដាល ព្រឹត្តិការណ៍។
+triggers: [student life, activities, workshop, bootcamp, event, community, class activity, experience, photo, gallery]
+last_updated: 2026-10-13
+source: https://www.aicacademy.ai/en
 ---
 
 # Student life
 
-> TODO: fill in with your academy's real information. Any line still marked TODO is unknown:
-> say you don't have that detail yet, call log_unanswered, and offer to take a message
-> for the front office. Never guess.
+## Quick answers
+- AICA runs **training sessions, bootcamps, and workshops** (visible in 11 activity photos on the homepage).
+- The **Workshops page** (https://www.aicacademy.ai/en/workshops) currently shows 0 workshops — check back for future dates.
+- Workshops are described as **"hands-on programmes in AI, cybersecurity, and governance for working professionals"**.
+- The homepage section is titled **"AICA Life"**, showing class activities and events.
 
 ## How to answer
-- Clubs, uniform, canteen and rules are in `student-life.md`. Read it before answering.
+- Read `student-life.md` for what is known.
+- For questions about upcoming workshops, say none are currently listed and suggest following AICA on social media or contacting admin@aicacademy.ai for announcements.
 
 ## When to hand off
-- Any report of bullying, harassment, a safety concern or a student in distress:
-  respond kindly, take a message for the front office straight away, and tell the caller
-  to phone the front office directly if it is urgent.
-- Disciplinary cases about a specific student: take a message. Do not discuss them.
+- Any safety concerns or incidents: take a message for admin@aicacademy.ai immediately.
+
+## Sources
+- https://www.aicacademy.ai/en (AICA Life gallery, accessed 2026-10-13)
+- https://www.aicacademy.ai/en/workshops (accessed 2026-10-13)

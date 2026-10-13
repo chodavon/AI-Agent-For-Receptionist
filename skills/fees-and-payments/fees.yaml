@@ -1,11 +1,116 @@
-# EXAMPLE DATA - replace with real fees. Amounts in USD per year.
+# Course fees — all amounts in USD. Updated 2026-10-13.
+# Source: https://www.aicacademy.ai/en/courses
 currency: USD
-registration_fee: 150
-tuition_per_year:
-  kindergarten: 1800
-  grade_1_to_6: 2400
-  grade_7_to_9: 2900
-  grade_10_to_12: 3300
-other:
-  uniform_set: 60
-  school_bus_per_year: 600
+note: "All prices include comprehensive curriculum and certification."
+
+courses:
+  # ── ON SPECIAL (starts Oct 19, 2026) ──
+  - name: "Certified Ethical Hacker (C|EH) v13"
+    price: 500
+    duration: "40 hours"
+    status: "On Special"
+    includes: "Curriculum + certification"
+
+  - name: "Certified Cybersecurity Technician (C|CT)"
+    price: 400
+    duration: "40 hours"
+    status: "On Special"
+    includes: "Curriculum + certification"
+
+  - name: "Artificial Intelligence Essentials"
+    price: 200
+    duration: "16 hours"
+    status: "On Special"
+    includes: "Curriculum + certification"
+
+  - name: "Certified AI Solution Practitioner (CASP)"
+    price: 400
+    duration: "40 hours"
+    status: "On Special"
+    includes: "Curriculum + certification"
+
+  # ── COMING SOON (price announced) ──
+  - name: "Building AI Agents — Foundation"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  - name: "Responsible AI & AI Governance Foundation"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  - name: "Generative AI for HR Professionals"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  - name: "AI for Leaders & Executives"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  - name: "Generative AI for Workplace Productivity"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  - name: "Master Prompt Engineering — Foundation"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  - name: "Master Prompt Engineering — Advanced"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  - name: "Vibe Code with AI — Foundation"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  - name: "Vibe Code with AI — Advanced"
+    price: 200
+    duration: "2 days"
+    status: "Coming Soon"
+
+  # ── COMING SOON (price NOT yet announced) ──
+  - name: "CyberResilience for Management and Leaders"
+    price: null
+    price_note: "Not announced as of 2026-10-13"
+    duration: "1 day"
+    status: "Coming Soon"
+
+  - name: "Data Protection Impact Assessment (DPIA) Workshop"
+    price: null
+    price_note: "Not announced as of 2026-10-13"
+    duration: "1 day"
+    status: "Coming Soon"
+
+  - name: "Certified DPO for Cambodia (LPDP)"
+    price: null
+    price_note: "Not announced as of 2026-10-13"
+    duration: "4 days"
+    status: "Coming Soon"
+
+  - name: "Practitioner Certificate for LPDP 2025"
+    price: null
+    price_note: "Not announced as of 2026-10-13"
+    duration: "3 days"
+    status: "Coming Soon"
+
+  - name: "LPDP Awareness for All Employees"
+    price: null
+    price_note: "Not announced as of 2026-10-13"
+    duration: "1 day"
+    status: "Coming Soon"
+
+payment_methods:
+  note: "The website footer shows a payment methods badge. Specific accepted methods not detailed on the site as of 2026-10-13. Contact admin@aicacademy.ai."
+
+discounts:
+  note: "No published discount or scholarship programs as of 2026-10-13. 'On Special' promotional pricing applies to the 4 launch courses."
+
+refund_policy:
+  note: "Not published on the website as of 2026-10-13. Contact admin@aicacademy.ai."

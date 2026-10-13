@@ -1,13 +1,19 @@
-# Step-by-step processes for this skill. The agent follows the steps one turn at a time.
-# EXAMPLE - adjust the steps to how your admissions office really works.
 workflows:
-  book_campus_tour:
-    when: The caller wants to visit the school or book a campus tour.
+  enrol_in_course:
+    when: The caller wants to sign up for a course or ask how to enrol.
     steps:
-      - Tell them tours run on weekdays, 8:00-11:00 and 14:00-16:00.
-      - Ask which day and time suits them.
-      - Ask for their name and a phone number or email.
-      - Ask the child's age or the grade they are interested in (optional).
-      - Read the details back and ask them to confirm.
-      - When confirmed, call take_message for "admissions" with the requested day/time and grade.
-      - Tell them the admissions office will call to confirm the tour.
+      - Ask which course they are interested in. If they are unsure, briefly describe the three tracks (AI, Cyber Security, GRC & Data Protection) and offer to list the available courses.
+      - Once they pick a course, confirm the course name, price (from fees.yaml), and start date.
+      - Tell them they can enrol online at https://www.aicacademy.ai/en/courses/{slug} by clicking "Enroll Now", or contact admin@aicacademy.ai / call +855 85 518 925 / message Telegram @aica_officialcambodia.
+      - Ask if they have any other questions about the course or enrolment process.
+      - If they want someone to contact them, ask for their name and phone number or email.
+      - Call take_message for "admissions" with their details and the course they are interested in.
+      - Tell them an advisor will respond within one business day.
+
+  ask_about_prerequisites:
+    when: The caller asks about prerequisites or entry requirements for a course.
+    steps:
+      - Check the course in programs.yaml for any listed prerequisites.
+      - If prerequisites are listed, share them.
+      - If prerequisites say "Not stated on website", tell the caller to contact admin@aicacademy.ai for confirmation.
+      - Offer to take a message if they want the admissions team to follow up.

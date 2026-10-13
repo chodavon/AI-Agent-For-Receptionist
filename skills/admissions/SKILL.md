@@ -1,25 +1,47 @@
 ---
 name: admissions
-description: Enrolling or registering a new student - who can apply, required documents, application steps, placement or entrance test, deadlines and booking a campus tour. ការចុះឈ្មោះចូលរៀន ឯកសារ ពាក្យសុំ ប្រឡងចូល ទស្សនកិច្ចសាលា.
+description: How to enrol in a course — enrolment steps, prerequisites, intake dates, required documents, contact channels for enrolment. ការចុះឈ្មោះចូលរៀន ឯកសារ ពាក្យសុំ តម្រូវការ។
+triggers: [enrol, enroll, register, sign up, apply, admission, join, start, how to join, intake, prerequisite, requirement]
+last_updated: 2026-10-13
+source: https://www.aicacademy.ai/en/courses
 ---
 
 # Admissions
 
-> EXAMPLE DATA - replace with your academy's real information.
+## Quick answers
+- Enrol online via the course page ("Enroll Now" button) or contact admin@aicacademy.ai.
+- You can also call +855 85 518 925 or message Telegram @aica_officialcambodia.
+- Advisors respond within **one business day**.
+- 4 courses are open for enrolment now (start Oct 19, 2026). The rest are Coming Soon.
 
-## Key facts
-- Grades offered: Kindergarten to Grade 12.
-- Applications are open all year. Main intake is in October; mid-year intake in March.
-- Students from Grade 3 upward take a short placement test (English + Maths).
-- Parents can book a campus tour on weekdays, 8:00-11:00 and 14:00-16:00.
+## How to enrol
+1. Visit https://www.aicacademy.ai/en/courses and choose your course.
+2. Click **"Enroll Now"** on the course page.
+3. Or contact AICA directly:
+   - Email: admin@aicacademy.ai
+   - Phone: +855 85 518 925
+   - Telegram: @aica_officialcambodia
+   - Walk-in: #5A-5B Street 114, Phsar Thmey 1, Daun Penh, Phnom Penh (Mon–Sun 8:00 AM – 5:00 PM)
+4. The admissions team will guide you through the rest.
 
-## Steps
-1. Fill in the application form at the front office or on the school website.
-2. Submit the documents listed in `requirements.md`.
-3. Placement test (Grade 3+), usually within one week.
-4. Interview with the Head of Section.
-5. Offer letter, then pay the registration fee (see the fees-and-payments skill).
+## Prerequisites
+- Most courses do not list specific prerequisites on the website.
+- **Vibe Code with AI — Foundation**: explicitly says "no prior coding experience required."
+- **Master Prompt Engineering — Advanced**: designed for professionals already using AI daily.
+- **Certified DPO for Cambodia**: builds on practitioner-level data protection skills.
+- For other courses, contact admin@aicacademy.ai to confirm entry requirements.
+
+## Intake dates
+- **October 19, 2026**: CEH, CCT, AI Essentials, CASP (On Special).
+- All other courses: dates to be announced.
+
+## Documents required
+Not published on the website as of 2026-10-13. Contact admin@aicacademy.ai for the enrolment requirements.
 
 ## When to hand off
-- Questions about a specific student's application status: take a message for the Admissions Office.
-- Scholarship decisions: take a message for the Admissions Office. Never promise a scholarship.
+- Questions about a specific person's application status: take a message for admin@aicacademy.ai.
+- Corporate or group enrolment: take a message for admin@aicacademy.ai.
+
+## Sources
+- https://www.aicacademy.ai/en/courses (accessed 2026-10-13)
+- https://www.aicacademy.ai/en/contact (accessed 2026-10-13)

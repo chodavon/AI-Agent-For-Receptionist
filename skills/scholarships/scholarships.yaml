@@ -1,12 +1,8 @@
-# TODO: replace with real scholarships. Copy the block per scholarship.
+# Scholarships. Updated 2026-10-13.
+# Source: https://www.aicacademy.ai/en/contact (inquiry type includes "Scholarship")
+
 scholarships:
-  - name: "TODO: e.g. Merit scholarship"
-    name_km: "TODO"
-    covers: "TODO: e.g. 50% or 100% of tuition"
-    eligibility:
-      - "TODO: e.g. grade 12 exam result A or B"
-    documents:
-      - "TODO: e.g. copy of grade 12 certificate"
-    how_to_apply: "TODO: e.g. online form on the website, or at the admissions office"
-    deadline: "TODO: YYYY-MM-DD"
-    results_announced: "TODO: e.g. by email within 4 weeks"
+  note: "No scholarship programs published on the website as of 2026-10-13."
+  contact: "admin@aicacademy.ai or +855 85 518 925"
+  inquiry_type_exists: true
+  comment: "The contact form lists 'Scholarship' as an inquiry type, suggesting scholarships may be available or planned. Direct all scholarship questions to admin@aicacademy.ai."

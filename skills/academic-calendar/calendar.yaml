@@ -1,23 +1,40 @@
-# TODO: replace with real dates. Use YYYY-MM-DD.
-academic_year: "TODO: e.g. 2026-2027"
+# Course start dates. Updated 2026-10-13.
+# Source: https://www.aicacademy.ai/en/courses
 
-semesters:
-  - name: "Semester 1"
-    classes_start: "TODO"
-    midterm_exams: "TODO"
-    final_exams: "TODO"
-    ends: "TODO"
-  - name: "Semester 2"
-    classes_start: "TODO"
-    midterm_exams: "TODO"
-    final_exams: "TODO"
-    ends: "TODO"
+upcoming_cohort:
+  date: "2026-10-19"
+  label: "October 2026 cohort"
+  courses:
+    - name: "Certified Ethical Hacker (C|EH) v13"
+      duration: "40 hours"
+      status: "On Special — enrolment open"
+    - name: "Certified Cybersecurity Technician (C|CT)"
+      duration: "40 hours"
+      status: "On Special — enrolment open"
+    - name: "Artificial Intelligence Essentials"
+      duration: "16 hours"
+      status: "On Special — enrolment open"
+    - name: "Certified AI Solution Practitioner (CASP)"
+      duration: "40 hours"
+      status: "On Special — enrolment open"
+
+coming_soon:
+  note: "Start dates not yet announced as of 2026-10-13. Contact admin@aicacademy.ai for updates."
+  courses:
+    - "Building AI Agents — Foundation (2 days)"
+    - "Responsible AI & AI Governance Foundation (2 days)"
+    - "Generative AI for HR Professionals (2 days)"
+    - "AI for Leaders & Executives (2 days)"
+    - "Generative AI for Workplace Productivity (2 days)"
+    - "Master Prompt Engineering — Foundation (2 days)"
+    - "Master Prompt Engineering — Advanced (2 days)"
+    - "Vibe Code with AI — Foundation (2 days)"
+    - "Vibe Code with AI — Advanced (2 days)"
+    - "CyberResilience for Management and Leaders (1 day)"
+    - "Data Protection Impact Assessment (DPIA) Workshop (1 day)"
+    - "Certified DPO for Cambodia — LPDP (4 days)"
+    - "Practitioner Certificate for LPDP 2025 (3 days)"
+    - "LPDP Awareness for All Employees (1 day)"
 
 holidays:
-  # Public holidays when the school is closed. Copy a line per holiday.
-  - { date: "TODO", name: "TODO: e.g. Khmer New Year", name_km: "TODO: e.g. ចូលឆ្នាំខ្មែរ" }
-
-events:
-  - { date: "TODO", name: "TODO: e.g. Orientation day for new students" }
-  - { date: "TODO", name: "TODO: e.g. Open day / campus tour" }
-  - { date: "TODO", name: "TODO: e.g. Graduation ceremony" }
+  note: "AICA has not published a holiday calendar. The office is open Monday–Sunday 8:00 AM – 5:00 PM."

@@ -1,14 +1,22 @@
-# TODO: replace with real routes, or delete the bus part if there is no school bus.
+# Transport to AICA. Updated 2026-10-13.
+# Source: https://www.aicacademy.ai/en/contact
+
 school_bus:
-  available: "TODO: yes / no"
-  fee: "TODO: e.g. 600 USD per year"
-  how_to_register: "TODO"
-  routes:
-    - name: "TODO: e.g. Route 1 - Toul Kork"
-      stops:
-        - { stop: "TODO", morning_pickup: "TODO", afternoon_dropoff: "TODO" }
+  available: false
+  note: "AICA does not run a school bus or shuttle service."
 
 getting_here:
-  public_bus: "TODO: e.g. city bus line number and nearest stop"
-  tuk_tuk: "TODO: e.g. ask for ... landmark"
-  parking: "TODO: motorbike and car parking, price if any"
+  address: "#5A-5B Street 114, Phsar Thmey 1, Daun Penh, Phnom Penh, Cambodia"
+  google_maps: "https://maps.app.goo.gl/Qk3uLfZ5UxW3Fnx5A?g_st=ipc"
+
+  nearest_landmarks:
+    - "Phsar Thmey (Central Market) — the campus is in the Phsar Thmey 1 commune"
+    - "Street 114, Daun Penh district"
+
+  by_tuk_tuk: "Ask for Street 114 near Phsar Thmey (Central Market), Daun Penh. Most tuk-tuk drivers know Central Market."
+
+  by_motorbike_or_car: "Head to Street 114 in the Phsar Thmey 1 area. Look for #5A-5B."
+
+  public_bus: "Not published on website as of 2026-10-13. Phnom Penh city buses run near Central Market."
+
+  parking: "Not published on website as of 2026-10-13. Contact admin@aicacademy.ai if you need parking information."

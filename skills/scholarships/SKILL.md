@@ -1,20 +1,25 @@
 ---
 name: scholarships
-description: Scholarships, financial aid and fee waivers - types available, who can apply, eligibility, required documents, how to apply, deadlines, and how results are announced. អាហារូបករណ៍ ជំនួយហិរញ្ញវត្ថុ លក្ខខណ្ឌ ការដាក់ពាក្យ.
+description: Scholarships, financial aid, fee waivers — whether any exist, how to apply, eligibility. អាហារូបករណ៍ ជំនួយហិរញ្ញវត្ថុ។
+triggers: [scholarship, financial aid, free, discount, fee waiver, sponsor, funding, afford]
+last_updated: 2026-10-13
+source: https://www.aicacademy.ai/en/contact
 ---
 
 # Scholarships
 
-> TODO: fill in with your academy's real information. Any line still marked TODO is unknown:
-> say you don't have that detail yet, call log_unanswered, and offer to take a message
-> for the admissions office. Never guess.
+## Quick answers
+- **No scholarship programs are published on the website** as of 2026-10-13.
+- The contact form at https://www.aicacademy.ai/en/contact lists "Scholarship" as an inquiry type, which suggests scholarships may be available or planned.
+- To ask about scholarships or financial aid, contact **admin@aicacademy.ai** or call **+855 85 518 925**.
 
 ## How to answer
-- Each scholarship's eligibility, coverage, documents and deadline are in `scholarships.yaml`.
-  Read it before answering.
-- You can explain the rules, but NEVER promise or suggest that a caller will receive a
-  scholarship. Decisions are made only by the scholarship committee.
+- Do not promise or suggest that scholarships exist unless AICA has confirmed them.
+- If asked, say: "Scholarship details are not published on the website yet. I recommend contacting admin@aicacademy.ai to ask about any available financial support."
+- Offer to take a message for the admissions team.
 
 ## When to hand off
-- Questions about a specific application's status or result: take a message for the
-  admissions office.
+- All scholarship questions: take a message for admin@aicacademy.ai. Never promise a scholarship.
+
+## Sources
+- https://www.aicacademy.ai/en/contact — inquiry type "Scholarship" listed (accessed 2026-10-13)

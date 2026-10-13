@@ -1,22 +1,68 @@
-# TODO: replace with real times. Use 24-hour format, e.g. "07:30".
-sessions:
-  morning:   { start: "TODO", end: "TODO", days: "TODO: e.g. Monday-Friday" }
-  afternoon: { start: "TODO", end: "TODO", days: "TODO" }
-  evening:   { start: "TODO", end: "TODO", days: "TODO" }
-  weekend:   { start: "TODO", end: "TODO", days: "TODO: e.g. Saturday-Sunday" }
+# Course durations. Updated 2026-10-13.
+# Source: https://www.aicacademy.ai/en/courses
+# Specific class hours (morning/afternoon/evening) not published on website.
 
-# Optional: weekly timetable per program and year. Copy the block per program.
-timetables:
-  - program: "TODO: program name"
-    year: 1
-    session: "TODO: morning / afternoon / evening"
-    monday:    ["TODO: subject"]
-    tuesday:   ["TODO"]
-    wednesday: ["TODO"]
-    thursday:  ["TODO"]
-    friday:    ["TODO"]
+durations:
+  - course: "Certified Ethical Hacker (C|EH) v13"
+    duration: "40 hours"
+    approximate_days: 5
 
-exams:
-  midterm: "TODO: e.g. week 8 of each semester"
-  final:   "TODO"
-  exam_rules: "TODO: e.g. bring student ID card, arrive 15 minutes early"
+  - course: "Certified Cybersecurity Technician (C|CT)"
+    duration: "40 hours"
+    approximate_days: 5
+
+  - course: "Artificial Intelligence Essentials"
+    duration: "16 hours"
+    approximate_days: 2
+
+  - course: "Certified AI Solution Practitioner (CASP)"
+    duration: "40 hours"
+    approximate_days: 5
+
+  - course: "Building AI Agents — Foundation"
+    duration: "2 days"
+
+  - course: "Responsible AI & AI Governance Foundation"
+    duration: "2 days"
+
+  - course: "Generative AI for HR Professionals"
+    duration: "2 days"
+
+  - course: "AI for Leaders & Executives"
+    duration: "2 days"
+
+  - course: "Generative AI for Workplace Productivity"
+    duration: "2 days"
+
+  - course: "Master Prompt Engineering — Foundation"
+    duration: "2 days"
+
+  - course: "Master Prompt Engineering — Advanced"
+    duration: "2 days"
+
+  - course: "Vibe Code with AI — Foundation"
+    duration: "2 days"
+
+  - course: "Vibe Code with AI — Advanced"
+    duration: "2 days"
+
+  - course: "CyberResilience for Management and Leaders"
+    duration: "1 day"
+
+  - course: "Data Protection Impact Assessment (DPIA) Workshop"
+    duration: "1 day"
+
+  - course: "Certified DPO for Cambodia (LPDP)"
+    duration: "4 days"
+
+  - course: "Practitioner Certificate for LPDP 2025"
+    duration: "3 days"
+
+  - course: "LPDP Awareness for All Employees"
+    duration: "1 day"
+
+delivery_mode:
+  note: "Not published on website as of 2026-10-13. All courses mention 'practical hands-on projects' which suggests in-person or hybrid delivery. Contact admin@aicacademy.ai."
+
+session_times:
+  note: "Specific class hours (morning/afternoon/evening/weekend) not published on website as of 2026-10-13. Contact admin@aicacademy.ai."
