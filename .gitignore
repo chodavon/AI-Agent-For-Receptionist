@@ -15,8 +15,7 @@ venv/
 # Data & models
 *.db
 *.db-journal
-models/*
-!models/.gitkeep
+models/
 uploads/
 
 # Editors / OS

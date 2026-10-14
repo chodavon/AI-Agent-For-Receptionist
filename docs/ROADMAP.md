@@ -207,7 +207,7 @@ bugs. The magic-byte check reduces the risk but doesn't remove it.
 - [x] Remove `TypeError` from the `except` clause
 
 ## 🟡 11. Automated evals (accuracy + prompt injection)
-**Problem:** the test sheet and attack table in `USEIT.md` (section 6) are manual.
+**Problem:** the test sheet and attack table in `docs/GUIDE.md` (section 6) are manual.
 *(Built in Phase 0 above.)*
 
 - [x] Script that runs the question set against the real model and checks the expected facts
@@ -301,8 +301,8 @@ but check it on the production box.
 4. **16** when traffic goes above one classroom's worth.
 5. Everything else as the project grows.
 
-See also: `USEIT.md` (how to use and test the system), `README.md` (overview and setup),
-`docs/PROGRESS.md` (speed-and-learning work notes), `docs/RESEARCH.md` (research log).
+See also: `docs/GUIDE.md` (how to use and test the system), `README.md` (overview and setup),
+`docs/RESEARCH.md` (research log).
 
 ---
 
@@ -311,7 +311,7 @@ See also: `USEIT.md` (how to use and test the system), `README.md` (overview and
 - AI slow response → ✅ fixed in Phases 1-3.
 - Less information about the school detail → fill in the TODOs in `skills/`.
 - Voice did not working (Voice input is disabled (set STT_ENABLED=true).)
-  → Fix: `pip install -e ".[voice]"` and set `STT_ENABLED=true` in `.env` (USEIT.md Step 6).
+  → Fix: `pip install -e ".[voice]"` and set `STT_ENABLED=true` in `.env` (docs/GUIDE.md Step 6).
 - Push response of the ai → ✅ streaming replies (Phase 1).
 - input the dataset to train → skill folders created; fill in the TODOs in `skills/`.
 - Error khmer language → the log you pasted was cut off before the error. Paste the full error

@@ -12,7 +12,7 @@ New entries go at the **top**. One line per finding; put details in a sub-bullet
 ## 2026-10-13 — AI receptionist best-practice research
 
 Research gathered to answer "why is my agent slow, and what do experts build?".
-Decisions below are tasks in `docs/PLAN.md`, Appendices A and B.
+Decisions below are tasks in `docs/Plan&Progress/PLAN.md`, Appendices A and B.
 
 ### Architecture and conversation design
 
@@ -70,7 +70,7 @@ Decisions below are tasks in `docs/PLAN.md`, Appendices A and B.
 
 ### What this research changed about our priorities
 
-Appendix A in `docs/PLAN.md` was already set from live log analysis. Appendix B
+Appendix A in `docs/Plan&Progress/PLAN.md` was already set from live log analysis. Appendix B
 added these research-driven items in priority order:
 
 1. B.1 Hybrid + RRF
@@ -139,7 +139,7 @@ separate file. The decisions it led to are recorded here from the project state.
   tokens to be byte-identical across calls; put everything that changes per request *after*
   the stable prefix — Gemini caching docs — The system prompt is built once and does not
   include timestamps or per-call data. Explicit `client.caches.create` is deferred to
-  Phase 6 (see `need-improve.md` 16.2).**
+  Phase 6 (see `docs/ROADMAP.md` 16.2).**
 
 - **STT model loading — 2026-10-10 — faster-whisper loads the model on first use, which
   caused a ~5 s delay on the first voice message — faster-whisper README + live
@@ -187,4 +187,4 @@ Research before, then write it here before changing code:
   - Optional details, numbers, trade-offs.
 ```
 
-If a finding contradicts `PLAN.md` or `need-improve.md`, flag it in that document too.
+If a finding contradicts `PLAN.md` or `ROADMAP.md`, flag it in that document too.

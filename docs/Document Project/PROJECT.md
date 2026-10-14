@@ -555,4 +555,4 @@ The `docker-compose.yml` sets `STT_ENABLED=true` and mounts a `models/` volume f
 - A.3 Voice input — Needs `pip install -e ".[voice]"` + `STT_ENABLED=true`
 - A.4 Router margin tuning — Pending real-data testing
 
-See `docs/PLAN.md` for the full plan and `docs/PROGRESS.md` for detailed implementation notes.
+See `docs/Plan&Progress/PLAN.md` for the full plan and `docs/Plan&Progress/PROGRESS.md` for detailed implementation notes.

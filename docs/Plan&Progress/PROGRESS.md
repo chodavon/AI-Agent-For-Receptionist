@@ -271,4 +271,4 @@ into chat earlier, so please **rotate both** if you haven't already.
    - the free-tier note
 6. Run pytest, ruff and bandit again, then **commit and push by hand** (section 7).
 
-To resume with Claude, say: *"Read docs/PLAN.md and docs/PROGRESS.md, then continue from step 2."*
+To resume with Claude, say: *"Read docs/Plan&Progress/PLAN.md and docs/Plan&Progress/PROGRESS.md, then continue from step 2."*
