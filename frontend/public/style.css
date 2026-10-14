@@ -42,8 +42,8 @@ button:disabled { opacity: .5; cursor: default; }
 
 .source-line { margin-top: 4px; font-size: 0.75rem; color: var(--muted); font-style: italic; }
 .suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.suggestions .chip { padding: 4px 12px; border-radius: 16px; border: 1px solid var(--primary); background: transparent; color: var(--primary); font-size: 0.82rem; cursor: pointer; transition: background 0.15s; }
-.suggestions .chip:hover { background: var(--primary); color: #fff; }
+.suggestions .chip { padding: 4px 12px; border-radius: 16px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-size: 0.82rem; cursor: pointer; transition: background 0.15s; }
+.suggestions .chip:hover { background: var(--accent); color: #fff; }
 .feedback { display: flex; gap: 6px; margin-top: 6px; font-size: 0.85rem; color: var(--muted); }
 .feedback button { padding: 2px 8px; }
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }

@@ -27,9 +27,11 @@ from receptionist.messages import service as messages
 from receptionist.metrics import service as metrics
 from receptionist.security import audit
 from receptionist.security.auth import require_admin
+from receptionist.security.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(require_admin)])
+_admin_rate = "10/minute"
 
 
 def _not_found():
@@ -51,11 +53,13 @@ def _flush_caches(request: Request) -> None:
 
 
 @router.get("/questions", response_model=list[QuestionOut])
-def pending_questions(db: Session = Depends(get_db)):
+@limiter.limit(_admin_rate)
+def pending_questions(request: Request, db: Session = Depends(get_db)):
     return learning.list_pending(db)
 
 
 @router.post("/questions/{item_id}/approve", response_model=QuestionOut)
+@limiter.limit(_admin_rate)
 def approve_question(
     item_id: int, body: ApproveIn, request: Request, db: Session = Depends(get_db)
 ):
@@ -69,7 +73,8 @@ def approve_question(
 
 
 @router.post("/questions/{item_id}/dismiss", response_model=QuestionOut)
-def dismiss_question(item_id: int, db: Session = Depends(get_db)):
+@limiter.limit(_admin_rate)
+def dismiss_question(item_id: int, request: Request, db: Session = Depends(get_db)):
     item = learning.dismiss(db, item_id)
     if item is None:
         raise _not_found()
@@ -78,6 +83,7 @@ def dismiss_question(item_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/questions/{item_id}/draft", response_model=QuestionOut)
+@limiter.limit(_admin_rate)
 async def draft_question(item_id: int, request: Request, db: Session = Depends(get_db)):
     """Ask the AI to draft an answer from the skills, for staff to edit before approving."""
     item = db.get(UnansweredQuestion, item_id)
@@ -99,11 +105,13 @@ async def draft_question(item_id: int, request: Request, db: Session = Depends(g
 
 
 @router.get("/knowledge", response_model=list[KnowledgeOut])
-def list_knowledge(db: Session = Depends(get_db)):
+@limiter.limit(_admin_rate)
+def list_knowledge(request: Request, db: Session = Depends(get_db)):
     return knowledge.list_active(db)
 
 
 @router.put("/knowledge/{entry_id}", response_model=KnowledgeOut)
+@limiter.limit(_admin_rate)
 def update_knowledge(
     entry_id: int, body: KnowledgeUpdateIn, request: Request, db: Session = Depends(get_db)
 ):
@@ -116,6 +124,7 @@ def update_knowledge(
 
 
 @router.delete("/knowledge/{entry_id}", status_code=204)
+@limiter.limit(_admin_rate)
 def delete_knowledge(entry_id: int, request: Request, db: Session = Depends(get_db)):
     if not knowledge.deactivate(db, entry_id):
         raise _not_found()
@@ -124,6 +133,7 @@ def delete_knowledge(entry_id: int, request: Request, db: Session = Depends(get_
 
 
 @router.post("/knowledge/{entry_id}/export", response_model=ExportOut)
+@limiter.limit(_admin_rate)
 def export_knowledge(entry_id: int, request: Request, db: Session = Depends(get_db)):
     """Move an approved answer into its skill's faq.md, then retire the database copy."""
     entry = db.get(KnowledgeEntry, entry_id)
@@ -145,12 +155,14 @@ def export_knowledge(entry_id: int, request: Request, db: Session = Depends(get_
 
 
 @router.get("/messages", response_model=list[MessageOut])
-def list_messages(status: str | None = None, db: Session = Depends(get_db)):
+@limiter.limit(_admin_rate)
+def list_messages(request: Request, status: str | None = None, db: Session = Depends(get_db)):
     return messages.list_messages(db, status)
 
 
 @router.post("/messages/{message_id}/done", response_model=MessageOut)
-def message_done(message_id: int, db: Session = Depends(get_db)):
+@limiter.limit(_admin_rate)
+def message_done(message_id: int, request: Request, db: Session = Depends(get_db)):
     msg = messages.mark_done(db, message_id)
     if msg is None:
         raise _not_found()
@@ -162,12 +174,14 @@ def message_done(message_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/skills", response_model=SkillsOut)
+@limiter.limit(_admin_rate)
 def list_skills(request: Request):
     registry = request.app.state.skills
     return SkillsOut(skills=registry.names(), errors=registry.errors)
 
 
 @router.post("/skills/reload", response_model=SkillsOut)
+@limiter.limit(_admin_rate)
 def reload_skills(request: Request, db: Session = Depends(get_db)):
     registry = request.app.state.skills
     registry.reload()
@@ -180,16 +194,19 @@ def reload_skills(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/feedback", response_model=list[FeedbackOut])
-def list_feedback(rating: str | None = None, db: Session = Depends(get_db)):
+@limiter.limit(_admin_rate)
+def list_feedback(request: Request, rating: str | None = None, db: Session = Depends(get_db)):
     return learning.list_feedback(db, rating if rating in ("up", "down") else None)
 
 
 @router.get("/routing-examples", response_model=list[RoutingExampleOut])
-def list_routing_examples(db: Session = Depends(get_db)):
+@limiter.limit(_admin_rate)
+def list_routing_examples(request: Request, db: Session = Depends(get_db)):
     return learning.list_routing_examples(db)
 
 
 @router.delete("/routing-examples/{example_id}", status_code=204)
+@limiter.limit(_admin_rate)
 def delete_routing_example(example_id: int, request: Request, db: Session = Depends(get_db)):
     if not learning.delete_routing_example(db, example_id):
         raise _not_found()
@@ -204,6 +221,7 @@ def delete_routing_example(example_id: int, request: Request, db: Session = Depe
 
 
 @router.get("/metrics")
+@limiter.limit(_admin_rate)
 def turn_metrics(request: Request, hours: int = 24, db: Session = Depends(get_db)):
     """p50/p95 latency, model calls per answer, cache hit ratio, slowest turns, feedback."""
     out = metrics.summary(db, hours=max(1, min(hours, 24 * 30)))

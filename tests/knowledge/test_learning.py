@@ -125,7 +125,8 @@ def test_draft_with_ai_uses_the_skill_content(client, fake_llm, db):
     r = client.post(f"/api/admin/questions/{item.id}/draft", headers=ADMIN)
     assert r.status_code == 200 and r.json()["draft_answer"].startswith("Grade 7 tuition")
     prompt_parts = fake_llm.calls[-1]["contents"][0].parts
-    assert prompt_parts[0].text.startswith('<school_reference skill="fees-and-payments">')
+    from receptionist.agent.prompts import REF_BOUNDARY
+    assert prompt_parts[0].text.startswith(f'{REF_BOUNDARY} skill="fees-and-payments"')
 
 
 def test_draft_without_matching_content_skips_the_llm(client, fake_llm, db):

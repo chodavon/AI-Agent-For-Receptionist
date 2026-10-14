@@ -27,6 +27,9 @@ class Transcript:
     duration: float
 
 
+ALLOWED_WHISPER_MODELS = {"tiny", "tiny.en", "base", "base.en", "small", "small.en", "medium", "medium.en", "large-v2", "large-v3"}
+
+
 class WhisperSTT:
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -34,6 +37,8 @@ class WhisperSTT:
         self._lock = threading.Lock()
 
     def _model(self, name: str):
+        if name not in ALLOWED_WHISPER_MODELS:
+            raise STTUnavailable(f"STT model {name!r} is not in the allowed list")
         with self._lock:
             if name not in self._models:
                 try:

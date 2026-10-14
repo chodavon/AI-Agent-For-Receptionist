@@ -12,7 +12,6 @@ Design notes:
 
 import asyncio
 import logging
-import re
 import threading
 import time
 from collections.abc import AsyncIterator
@@ -119,6 +118,21 @@ class SessionState:
         )
 
 
+MAX_SESSION_BYTES = 256 * 1024
+
+
+def _estimate_session_bytes(state: SessionState) -> int:
+    total = 0
+    for content in state.contents:
+        for part in getattr(content, "parts", []):
+            text = getattr(part, "text", None)
+            if text:
+                total += len(text.encode("utf-8", errors="replace"))
+    if state.summary:
+        total += len(state.summary.encode("utf-8", errors="replace"))
+    return total
+
+
 class SessionStore:
     """In-memory conversation state, with expiry. Use Redis or a DB for multiple workers."""
 
@@ -136,6 +150,9 @@ class SessionStore:
             return entry[1].copy() if entry else SessionState()
 
     def save(self, session_id: str, state: SessionState) -> None:
+        if _estimate_session_bytes(state) > MAX_SESSION_BYTES:
+            state.contents = state.contents[-4:]
+            state.skills_in_context.clear()
         with self._lock:
             self._data[session_id] = (time.monotonic(), state)
             if len(self._data) > self.max_sessions:
@@ -167,12 +184,12 @@ class SessionStore:
             del self._data[key]
 
 
-_FAKE_REFERENCE = re.compile(r"</?\s*school_reference", re.IGNORECASE)
+from receptionist.agent.prompts import REF_BOUNDARY
 
 
 def caller_text(text: str) -> str:
-    """Neutralise anything in the caller's message that imitates our reference tag."""
-    return _FAKE_REFERENCE.sub("(reference", text)
+    """Neutralise anything in the caller's message that imitates our reference boundary."""
+    return text.replace(REF_BOUNDARY, "[blocked]")
 
 
 NO_MATCH_NOTE = (
@@ -197,7 +214,7 @@ def _learned_examples() -> dict[str, list[str]]:
 
 
 def reference_block(skill: str, content: str) -> str:
-    return f'<school_reference skill="{skill}">\n{content}\n</school_reference>'
+    return f'{REF_BOUNDARY} skill="{skill}"\n{content}\n{REF_BOUNDARY}'
 
 
 @dataclass

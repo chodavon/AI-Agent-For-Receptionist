@@ -63,10 +63,9 @@ def create_app(settings: Settings | None = None, agent_client=None) -> FastAPI:
     app = FastAPI(
         title="AI Receptionist",
         lifespan=lifespan,
-        # Interactive API docs only outside production.
-        docs_url=None if settings.is_production else "/docs",
+        docs_url="/docs" if settings.environment == "development" else None,
         redoc_url=None,
-        openapi_url=None if settings.is_production else "/openapi.json",
+        openapi_url="/openapi.json" if settings.environment == "development" else None,
     )
 
     skills = SkillRegistry(settings.skills_dir)

@@ -10,7 +10,7 @@ os.environ.update(
     DATABASE_URL=f"sqlite:///{Path(_tmp) / 'test.db'}",
     SKILLS_DIR=str(ROOT / "skills"),
     WEB_DIR=str(ROOT / "web"),
-    ADMIN_API_KEY="test-admin-key",
+    ADMIN_API_KEY="test-admin-key-0123456789abcdef0123",
     GEMINI_API_KEY="",
     RATE_LIMIT="1000/minute",
     # Deterministic keyword routing in tests (no embeddings API).
@@ -26,7 +26,7 @@ from google.genai import types  # noqa: E402
 
 from receptionist.database import SessionLocal, init_db  # noqa: E402
 
-ADMIN = {"X-Admin-Key": "test-admin-key"}
+ADMIN = {"X-Admin-Key": "test-admin-key-0123456789abcdef0123"}
 
 
 def text_block(text):

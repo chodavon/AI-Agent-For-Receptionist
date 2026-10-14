@@ -155,15 +155,20 @@ async def chat_stream(request: Request, body: ChatRequest):
             db, str(body.session_id), body.message, lang_hint=body.lang, stats=stats
         )
         try:
-            async for item in stream:
-                if isinstance(item, AgentReply):
-                    yield _sse("done", await _finish(request, db, item, stats))
-                    return
-                if await request.is_disconnected():
-                    stats.outcome = "disconnected"
-                    await asyncio.to_thread(metrics.record, db, stats)
-                    return  # closing the generator cancels the upstream Gemini stream
-                yield _sse("delta", {"text": item})
+            async with asyncio.timeout(120):
+                async for item in stream:
+                    if isinstance(item, AgentReply):
+                        yield _sse("done", await _finish(request, db, item, stats))
+                        return
+                    if await request.is_disconnected():
+                        stats.outcome = "disconnected"
+                        await asyncio.to_thread(metrics.record, db, stats)
+                        return
+                    yield _sse("delta", {"text": item})
+        except TimeoutError:
+            stats.outcome = "timeout"
+            await asyncio.to_thread(metrics.record, db, stats)
+            yield _sse("error", {"detail": BUSY})
         except Exception as exc:
             _api_failure(exc, stats)
             await asyncio.to_thread(metrics.record, db, stats)

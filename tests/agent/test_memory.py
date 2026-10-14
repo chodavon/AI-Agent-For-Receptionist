@@ -70,7 +70,7 @@ def test_transcript_skips_internal_blocks_and_masks_personal_data():
             role="user",
             parts=[
                 types.Part.from_text(
-                    text='<school_reference skill="fees">secret</school_reference>'
+                    text=f'{memory.REF_BOUNDARY} skill="fees"\nsecret\n{memory.REF_BOUNDARY}'
                 ),
                 types.Part.from_text(text="Call me on 012 345 678, email a@b.com"),
             ],

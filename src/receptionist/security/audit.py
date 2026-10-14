@@ -26,7 +26,11 @@ class AuditEvent(Base):
 
 def record(db: Session, actor: str, action: str, detail: dict, session_id: str | None = None):
     # Details are redacted before storage: the audit log must not become a PII store.
-    text = redact(json.dumps(detail, ensure_ascii=False, default=str))[:4000]
+    raw = redact(json.dumps(detail, ensure_ascii=False, default=str))
+    if len(raw) > 4000:
+        text = raw[:2000] + "\n…[truncated]…\n" + raw[-2000:]
+    else:
+        text = raw
     db.add(AuditEvent(actor=actor, action=action, session_id=session_id, detail=text))
     db.commit()
     logger.info("%s %s session=%s", actor, action, session_id)

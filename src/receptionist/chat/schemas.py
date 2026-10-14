@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 class ChatRequest(BaseModel):
     session_id: UUID
-    message: str = Field(min_length=1, max_length=4000)
+    message: str = Field(min_length=1, max_length=1000)
     # Language from speech-to-text, when the message came from a voice recording.
     lang: Literal["en", "km"] | None = None
 

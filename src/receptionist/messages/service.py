@@ -19,9 +19,12 @@ def create(
     return msg
 
 
+VALID_STATUSES = {"new", "done"}
+
+
 def list_messages(db: Session, status: str | None = None) -> list[StaffMessage]:
     stmt = select(StaffMessage).order_by(StaffMessage.id.desc())
-    if status:
+    if status and status in VALID_STATUSES:
         stmt = stmt.where(StaffMessage.status == status)
     return list(db.scalars(stmt))
 

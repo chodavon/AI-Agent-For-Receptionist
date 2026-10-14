@@ -8,6 +8,7 @@ and summaries live only in memory with the rest of the session (never stored).
 
 from google.genai import types
 
+from receptionist.agent.prompts import REF_BOUNDARY
 from receptionist.security.redact import redact
 
 SUMMARY_PROMPT = """\
@@ -37,7 +38,7 @@ Question: {question}
 def _is_internal(text: str) -> bool:
     """School references and server notes are context, not conversation."""
     stripped = text.lstrip()
-    return stripped.startswith(("<school_reference", "[Server note", "<conversation_summary"))
+    return stripped.startswith((REF_BOUNDARY, "[Server note", "<conversation_summary"))
 
 
 def transcript(contents: list[types.Content], previous_summary: str | None = None) -> str:

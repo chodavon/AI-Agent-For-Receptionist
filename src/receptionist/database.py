@@ -1,6 +1,8 @@
 """Database engine, session factory and declarative base."""
 
 import logging
+import os
+import stat
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -27,7 +29,14 @@ def make_engine(url: str) -> Engine:
     if url.startswith("sqlite:///") and not url.startswith("sqlite:////"):
         db_path = Path(url.removeprefix("sqlite:///"))
         db_path.parent.mkdir(parents=True, exist_ok=True)
-    return create_engine(url, connect_args=connect_args)
+    eng = create_engine(url, connect_args=connect_args)
+    if url.startswith("sqlite:///") and not url.startswith("sqlite:////"):
+        try:
+            if db_path.exists():
+                os.chmod(db_path, stat.S_IRUSR | stat.S_IWUSR)
+        except OSError:
+            logger.warning("could not restrict database file permissions")
+    return eng
 
 
 engine = make_engine(get_settings().database_url)

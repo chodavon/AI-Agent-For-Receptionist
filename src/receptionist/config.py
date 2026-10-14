@@ -3,8 +3,12 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+import logging
+
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_cfg_logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -65,12 +69,29 @@ class Settings(BaseSettings):
     # Admin
     admin_api_key: SecretStr = SecretStr("")
 
+    @field_validator("admin_api_key")
+    @classmethod
+    def _check_admin_key_length(cls, v: SecretStr) -> SecretStr:
+        secret = v.get_secret_value()
+        if secret and len(secret) < 32:
+            raise ValueError("ADMIN_API_KEY must be at least 32 characters")
+        if not secret:
+            _cfg_logger.warning("ADMIN_API_KEY is empty — all admin endpoints are locked out")
+        return v
+
+    @field_validator("cors_origins")
+    @classmethod
+    def _no_wildcard_cors(cls, v: str) -> str:
+        if "*" in [o.strip() for o in v.split(",")]:
+            raise ValueError("CORS_ORIGINS must not contain '*'; list explicit origins")
+        return v
+
     # Limits
     max_audio_bytes: int = Field(default=10 * 1024 * 1024, gt=0)
     max_audio_seconds: int = Field(default=120, gt=0)
     max_text_chars: int = Field(default=1000, gt=0)
     # Hard limit: after this many messages a conversation starts fresh (safety net).
-    max_history_turns: int = 40
+    max_history_turns: int = Field(default=40, ge=4, le=200)
     # After this many caller messages, older turns are summarised in the background so long
     # chats stay fast and keep their context. 0 = never summarise.
     summarize_after_turns: int = Field(default=10, ge=0)
@@ -86,6 +107,15 @@ class Settings(BaseSettings):
     # Text-to-speech: "browser" | "mms"
     tts_provider: str = "browser"
     tts_mms_revision: str = "main"
+
+    @model_validator(mode="after")
+    def _check_production_safety(self) -> "Settings":
+        if self.environment.lower() == "production":
+            if self.tts_provider == "mms" and self.tts_mms_revision in ("main", "master"):
+                raise ValueError(
+                    "TTS_MMS_REVISION must be a pinned commit hash in production, not 'main'"
+                )
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:
