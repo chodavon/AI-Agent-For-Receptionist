@@ -26,6 +26,7 @@ from google.genai import types
 from sqlalchemy.orm import Session
 
 from receptionist.agent import guardrails, memory
+from receptionist.agent.model_selector import choose as choose_model
 from receptionist.agent.prompt_cache import PromptCacheRegistry
 from receptionist.agent.prompts import build_system_prompt
 from receptionist.agent.tools import ToolContext, run_tool, tool_definitions
@@ -76,6 +77,8 @@ class AgentReply:
     session_reset: bool = False
     stats: TurnStats | None = None
     question: str = ""
+    suggestions: list[str] = field(default_factory=list)
+    source: str | None = None
 
 
 @dataclass
@@ -177,6 +180,12 @@ NO_MATCH_NOTE = (
     "message. If none of the listed skills clearly covers it, don't search further: call "
     "log_unanswered and offer to take a message.]"
 )
+
+DISAMBIGUATE_NOTE = (
+    "[Server note: the question is ambiguous — it could be about {candidates}. "
+    "Ask a short clarifying question listing these options before answering.]"
+)
+AMBIGUOUS_MIN_SCORE = 0.5
 
 
 def _learned_examples() -> dict[str, list[str]]:
@@ -493,15 +502,26 @@ class ReceptionistAgent:
                 f"#{approved[0].id} ({approved[1]:.2f})" if approved else "none",
             )  # fmt: skip
             if not route.skill and approved is None:
-                user_parts.append(types.Part.from_text(text=NO_MATCH_NOTE))
+                if route.score >= AMBIGUOUS_MIN_SCORE and len(route.candidates) >= 2:
+                    labels = [c.replace("-", " ").replace("_", " ") for c in route.candidates[:3]]
+                    user_parts.append(types.Part.from_text(
+                        text=DISAMBIGUATE_NOTE.format(candidates=" or ".join(labels))
+                    ))
+                else:
+                    user_parts.append(types.Part.from_text(text=NO_MATCH_NOTE))
         if state.summary and not state.summary_sent:
             user_parts.insert(0, types.Part.from_text(text=memory.summary_block(state.summary)))
             state.summary_sent = True
         user_parts.append(types.Part.from_text(text=caller_text(text)))
         contents = state.contents
         contents.append(types.Content(role="user", parts=user_parts))
-        # Answer already attached and no multi-step workflow: the fast model is enough.
-        fast = stats.path in ("routed", "knowledge") and not workflow
+        _, fast = choose_model(
+            self.settings,
+            routed_skill=routed_skill,
+            has_workflow=workflow,
+            lang=lang,
+            path=stats.path or "",
+        )
         models = self._models(fast_first=fast)
         ctx = ToolContext(db=db, skills=self.skills, session_id=session_id)
         config = self._config(fast_path=fast)
@@ -631,13 +651,30 @@ class ReceptionistAgent:
             )
             self._background.add(task)
             task.add_done_callback(self._background.discard)
+        source = None
+        suggestions: list[str] = []
+        final_skill = stats.skill or routed_skill
+        if final_skill and stats.path in ("routed", "knowledge"):
+            skill_obj = self.skills.get(final_skill)
+            if skill_obj is not None:
+                source = final_skill.replace("-", " ").replace("_", " ")
+                suggestions = self._skill_suggestions(final_skill, text)
         yield AgentReply(
             reply_text,
             reply_lang,
             session_reset=reset,
             stats=stats,
             question=text,
+            suggestions=suggestions,
+            source=source,
         )
+
+    def _skill_suggestions(self, skill_name: str, current_question: str, limit: int = 3) -> list[str]:
+        """Pick a few FAQ questions from the skill as quick-reply suggestions."""
+        questions = self.skills.example_questions(skill_name)
+        current_lower = current_question.strip().lower()
+        filtered = [q for q in questions if q.strip().lower() != current_lower]
+        return filtered[:limit]
 
     async def _summarize(self, session_id: str, turns_seen: int) -> None:
         """Condense the conversation so far into a short summary (runs in the background)."""

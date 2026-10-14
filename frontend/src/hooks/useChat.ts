@@ -117,6 +117,8 @@ export function useChat() {
                   role: "bot",
                   text: done.reply,
                   ...(done.turn_id ? { turnId: done.turn_id } : {}),
+                  ...(done.suggestions?.length ? { suggestions: done.suggestions } : {}),
+                  ...(done.source ? { source: done.source } : {}),
                 };
                 const at = next.findIndex((t) => t.id === botId);
                 if (at === -1) next.push(final);

@@ -36,11 +36,15 @@ def _not_found():
     return HTTPException(status_code=404, detail="Not found")
 
 
-def _flush_answer_cache(request: Request) -> None:
-    """Drop cached answers when the source of truth changes."""
-    cache = getattr(request.app.state.agent, "answer_cache", None)
+def _flush_caches(request: Request) -> None:
+    """Drop cached answers and prompt caches when the source of truth changes."""
+    agent = request.app.state.agent
+    cache = getattr(agent, "answer_cache", None)
     if cache is not None:
         cache.flush()
+    pcache = getattr(agent, "prompt_cache", None)
+    if pcache is not None:
+        pcache.flush()
 
 
 # --- Review queue (the learning loop) ---
@@ -106,7 +110,7 @@ def update_knowledge(
     entry = knowledge.update_entry(db, entry_id, body.answer)
     if entry is None:
         raise _not_found()
-    _flush_answer_cache(request)
+    _flush_caches(request)
     audit.record(db, "admin", "update_knowledge", {"id": entry_id, "new_id": entry.id})
     return entry
 
@@ -115,7 +119,7 @@ def update_knowledge(
 def delete_knowledge(entry_id: int, request: Request, db: Session = Depends(get_db)):
     if not knowledge.deactivate(db, entry_id):
         raise _not_found()
-    _flush_answer_cache(request)
+    _flush_caches(request)
     audit.record(db, "admin", "deactivate_knowledge", {"id": entry_id})
 
 
@@ -132,7 +136,7 @@ def export_knowledge(entry_id: int, request: Request, db: Session = Depends(get_
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     knowledge.deactivate(db, entry_id)
     registry.reload()  # the router rebuilds its index on the next question
-    _flush_answer_cache(request)
+    _flush_caches(request)
     audit.record(db, "admin", "export_knowledge", {"id": entry_id, "file": file})
     return ExportOut(skill=entry.skill, file=file)
 
@@ -167,7 +171,7 @@ def list_skills(request: Request):
 def reload_skills(request: Request, db: Session = Depends(get_db)):
     registry = request.app.state.skills
     registry.reload()
-    _flush_answer_cache(request)
+    _flush_caches(request)
     audit.record(db, "admin", "reload_skills", {"skills": registry.names()})
     return SkillsOut(skills=registry.names(), errors=registry.errors)
 
@@ -192,7 +196,7 @@ def delete_routing_example(example_id: int, request: Request, db: Session = Depe
     router_ = request.app.state.agent.router
     if router_ is not None:
         router_.examples_changed()
-    _flush_answer_cache(request)
+    _flush_caches(request)
     audit.record(db, "admin", "delete_routing_example", {"id": example_id})
 
 
@@ -206,4 +210,6 @@ def turn_metrics(request: Request, hours: int = 24, db: Session = Depends(get_db
     out["feedback"] = learning.feedback_counts(db)
     cache = getattr(request.app.state.agent, "answer_cache", None)
     out["answer_cache"] = cache.stats() if cache else {"entries": 0, "hits": 0, "misses": 0, "hit_rate": 0.0}
+    pcache = getattr(request.app.state.agent, "prompt_cache", None)
+    out["prompt_cache"] = pcache.stats() if pcache else {"entries": 0, "hits": 0, "creates": 0, "failures": 0, "hit_rate": 0.0}
     return out

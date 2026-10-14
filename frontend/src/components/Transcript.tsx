@@ -5,9 +5,10 @@ import Bubble from "./Bubble";
 interface Props {
   turns: Turn[];
   onRate: (turnId: string, rating: FeedbackRating) => void;
+  onSuggestion?: (text: string) => void;
 }
 
-export default function Transcript({ turns, onRate }: Props) {
+export default function Transcript({ turns, onRate, onSuggestion }: Props) {
   const listRef = useRef<HTMLOListElement>(null);
 
   // Keep the newest message in view as the reply streams in.
@@ -19,7 +20,7 @@ export default function Transcript({ turns, onRate }: Props) {
   return (
     <ol id="log" className="log" aria-live="polite" ref={listRef}>
       {turns.map((turn) => (
-        <Bubble key={turn.id} turn={turn} onRate={onRate} />
+        <Bubble key={turn.id} turn={turn} onRate={onRate} onSuggestion={onSuggestion} />
       ))}
     </ol>
   );

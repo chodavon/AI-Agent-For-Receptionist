@@ -56,7 +56,11 @@ export default function App() {
         payment details.
       </p>
 
-      <Transcript turns={chat.turns} onRate={chat.rate} />
+      <Transcript
+        turns={chat.turns}
+        onRate={chat.rate}
+        onSuggestion={(text) => void chat.send(text, lang)}
+      />
 
       <Composer
         busy={chat.busy}

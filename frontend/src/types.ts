@@ -23,6 +23,10 @@ export interface Turn {
   turnId?: string;
   /** Set once a rating has been sent, so the chips stop being clickable. */
   rating?: FeedbackRating;
+  /** Quick-reply suggestions from the matched skill's FAQ. */
+  suggestions?: string[];
+  /** Skill that sourced the answer, e.g. "fees and payments". */
+  source?: string;
 }
 
 /** Payload of the SSE `done` event. */
@@ -32,6 +36,8 @@ export interface DoneEvent {
   lang?: Lang;
   session_reset?: boolean;
   audio_base64?: string;
+  suggestions?: string[];
+  source?: string;
 }
 
 /** Payload of the SSE `delta` event. */

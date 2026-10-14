@@ -18,7 +18,7 @@ import asyncio
 import logging
 from collections import OrderedDict
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from receptionist.router.embeddings import GeminiEmbedder, Vector, cosine, document_text, query_text
 from receptionist.router.lexical import LexicalIndex
@@ -40,6 +40,7 @@ class RouteResult:
     score: float
     method: str  # "embedding" | "lexical" | "follow-up" | "none"
     margin: float = 0.0  # lead over the second-best skill
+    candidates: list[str] = field(default_factory=list)
 
 
 class SkillRouter:
@@ -141,7 +142,8 @@ class SkillRouter:
         # Calibrated on real questions: absolute scores of matches and non-matches overlap,
         # but true matches are clearly ahead of the runner-up skill.
         routed = score >= self.threshold and margin >= self.margin
-        return RouteResult(skill if routed else None, score, "embedding", margin)
+        top_names = [name for name, _ in ranked[:3]]
+        return RouteResult(skill if routed else None, score, "embedding", margin, top_names)
 
     def _lexical_route(self, question: str) -> RouteResult:
         scores = sorted(self._lexical.scores(question).items(), key=lambda kv: -kv[1])

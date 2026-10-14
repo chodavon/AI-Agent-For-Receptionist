@@ -69,13 +69,18 @@ async def _finish(request: Request, db: Session, result: AgentReply, stats: Turn
             turn_id,
             TurnRecord(result.question, result.text, stats.skill, result.lang),
         )
-    return {
+    out = {
         "reply": result.text,
         "lang": result.lang,
         "audio_base64": base64.b64encode(audio).decode() if audio else None,
         "session_reset": result.session_reset,
         "turn_id": turn_id,
     }
+    if result.suggestions:
+        out["suggestions"] = result.suggestions
+    if result.source:
+        out["source"] = result.source
+    return out
 
 
 async def _answer(

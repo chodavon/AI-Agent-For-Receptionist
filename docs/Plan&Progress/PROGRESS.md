@@ -266,4 +266,33 @@ into chat earlier, so please **rotate both** if you haven't already.
 5. ~~Update `docs/GUIDE.md` and `README.md`~~ — ✅ Done 2026-10-14.
 6. Run pytest, ruff and bandit again, then **commit and push by hand** (section 7).
 
+---
+
+## 10. Appendix B tasks completed (2026-10-14)
+
+### B.3 Semantic answer cache — ✅ Done
+- `src/receptionist/cache/service.py`: `AnswerCache` with cosine similarity lookup, LRU eviction, flush on mutations.
+- Wired into `agent/client.py` — returns cached answers instantly (`path=cache`).
+- All admin mutation endpoints flush the cache.
+- 6 tests in `tests/agent/test_answer_cache.py`.
+
+### B.4 Explicit Gemini prompt caching — ✅ Done
+- `src/receptionist/agent/prompt_cache.py`: `PromptCacheRegistry` using `client.caches.create()`.
+- Per-skill caches, auto-flush on skills version change or admin reload.
+- Stats exposed on `/api/admin/metrics` (`prompt_cache`).
+- Settings: `PROMPT_CACHE_ENABLED` (default false), `PROMPT_CACHE_TTL_SECONDS` (default 3600).
+- 6 tests in `tests/agent/test_prompt_cache.py`.
+
+### B.8 Conversation-design patterns — ✅ Done
+- **Quick-reply suggestions**: after a routed/knowledge answer, the SSE `done` event includes `suggestions` (FAQ questions from the matched skill). The React UI renders them as clickable chips that send a new message.
+- **Disambiguation**: when the router score is 0.5–0.65 (ambiguous, no clear winner), the agent asks a clarifying question listing the top candidate skills instead of guessing.
+- **Source citation**: the `done` event includes `source` (skill name), displayed as an italic line below the answer.
+- Frontend: `Bubble.tsx`, `Transcript.tsx`, `App.tsx`, `types.ts`, `style.css` updated.
+
+### B.9 Multi-model LLM routing — ✅ Done
+- `src/receptionist/agent/model_selector.py`: `choose()` picks the right model based on route, workflow, and language.
+- Rules: routed FAQ → fast model; workflow or no route → main model; Khmer → main model (fast model weaker at KM).
+- Wired into `agent/client.py`, replacing inline fast-path logic.
+- 6 tests in `tests/agent/test_model_selector.py`.
+
 To resume with Claude, say: *"Read docs/Plan&Progress/PLAN.md and docs/Plan&Progress/PROGRESS.md, then continue from step 2."*
