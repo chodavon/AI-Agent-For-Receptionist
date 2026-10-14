@@ -92,7 +92,7 @@ How it copes with failures:
 | `src/receptionist/agent/memory.py` | Prompts for summaries and AI drafts; `transcript()` with redaction |
 | `src/receptionist/admin/export.py` | `export_to_faq()`: writes an approved Q&A into `skills/<skill>/faq.md` safely |
 | `skills/admissions/workflow.yaml` | Steps for booking a campus tour |
-| `scripts/run_eval.py` | Asks the evaluation questions to the real model and writes a report to `reports/` |
+| `tests/evals/run_eval.py` | Asks the evaluation questions to the real model and writes a report to `reports/` |
 | `tests/evals/questions.yaml` | 18 evaluation questions in English and Khmer (facts, unknown topics, injection attempts) |
 | `tests/test_metrics.py` | Tests for the timings |
 | `tests/test_stream.py` | Tests for streaming (SSE) |
@@ -197,7 +197,7 @@ in Git Bash. In PowerShell, use `.venv\Scripts\python` instead.
 
 ### Evaluation with the real Gemini model (uses your quota)
 ```bash
-PYTHONIOENCODING=utf-8 .venv/Scripts/python scripts/run_eval.py --delay 3
+PYTHONIOENCODING=utf-8 .venv/Scripts/python tests/evals/run_eval.py --delay 3
 # Report goes to reports/ (ignored by git). PYTHONIOENCODING is needed to print Khmer on Windows.
 # --delay = seconds between questions; increase it if you get 429 errors on the free tier.
 ```
@@ -254,7 +254,7 @@ into chat earlier, so please **rotate both** if you haven't already.
 1. **Run the tests** to confirm everything is still green:
    `.venv/Scripts/python -m pytest -q` (expect 122 passed).
 2. **Run the eval** (optional, uses quota):
-   `PYTHONIOENCODING=utf-8 .venv/Scripts/python scripts/run_eval.py --delay 3`, then compare
+   `PYTHONIOENCODING=utf-8 .venv/Scripts/python tests/evals/run_eval.py --delay 3`, then compare
    accuracy and speed with the numbers in section 1.
 3. **Update `need-improve.md`** (whole-file rewrite): mark Phase 5 ✅ and add a log line.
 4. **Phase 6**: write up the infrastructure items in `need-improve.md`:
@@ -271,4 +271,4 @@ into chat earlier, so please **rotate both** if you haven't already.
    - the free-tier note
 6. Run pytest, ruff and bandit again, then **commit and push by hand** (section 7).
 
-To resume with Claude, say: *"Read progress/PLAN.md and progress/PROGRESS.md, then continue from step 2."*
+To resume with Claude, say: *"Read docs/PLAN.md and docs/PROGRESS.md, then continue from step 2."*

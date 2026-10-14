@@ -12,7 +12,7 @@ New entries go at the **top**. One line per finding; put details in a sub-bullet
 ## 2026-10-13 — AI receptionist best-practice research
 
 Research gathered to answer "why is my agent slow, and what do experts build?".
-Decisions below are tasks in `progress/PLAN.md`, Appendices A and B.
+Decisions below are tasks in `docs/PLAN.md`, Appendices A and B.
 
 ### Architecture and conversation design
 
@@ -70,7 +70,7 @@ Decisions below are tasks in `progress/PLAN.md`, Appendices A and B.
 
 ### What this research changed about our priorities
 
-Appendix A in `progress/PLAN.md` was already set from live log analysis. Appendix B
+Appendix A in `docs/PLAN.md` was already set from live log analysis. Appendix B
 added these research-driven items in priority order:
 
 1. B.1 Hybrid + RRF

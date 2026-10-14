@@ -113,9 +113,7 @@ AI-Agent For Receptionist/
 ├── skills/                      # 11 skill folders with real AICA data
 ├── web/                         # Chat UI + Admin dashboard
 ├── tests/                       # 122 tests + eval questions
-├── scripts/run_eval.py          # Live accuracy + latency evaluation
-├── progress/                    # PLAN.md + PROGRESS.md
-├── docs/                        # Research, lockfile, this file
+├── docs/                        # Research, lockfile, PLAN, PROGRESS, this file
 └── models/                      # Placeholder for Khmer Whisper model
 ```
 
@@ -487,7 +485,7 @@ RATE_LIMIT=20/minute
 
 **Evaluation set:** `tests/evals/questions.yaml` — 18 questions in English and Khmer.
 
-**Live eval:** `scripts/run_eval.py` — runs against real Gemini, reports accuracy + p50/p95 latency.
+**Live eval:** `tests/evals/run_eval.py` — runs against real Gemini, reports accuracy + p50/p95 latency.
 
 Run tests:
 ```bash
@@ -496,7 +494,7 @@ pytest
 
 Run live evaluation:
 ```bash
-python scripts/run_eval.py
+python tests/evals/run_eval.py
 ```
 
 ---
@@ -557,4 +555,4 @@ The `docker-compose.yml` sets `STT_ENABLED=true` and mounts a `models/` volume f
 - A.3 Voice input — Needs `pip install -e ".[voice]"` + `STT_ENABLED=true`
 - A.4 Router margin tuning — Pending real-data testing
 
-See `progress/PLAN.md` for the full plan and `progress/PROGRESS.md` for detailed implementation notes.
+See `docs/PLAN.md` for the full plan and `docs/PROGRESS.md` for detailed implementation notes.

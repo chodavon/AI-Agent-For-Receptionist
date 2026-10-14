@@ -16,7 +16,7 @@ that survives Gemini overloads, and one that learns from feedback.
 
 | Phase | What | Status |
 |---|---|---|
-| 0 | Measure: per-turn timing + token metrics; eval question set + `scripts/run_eval.py` | ✅ |
+| 0 | Measure: per-turn timing + token metrics; eval question set + `tests/evals/run_eval.py` | ✅ |
 | 1 | Streaming replies (SSE), async Gemini client, thinking level `low`, **retry + fallback model on 503/429**, speech-model warm-up, speak sentence by sentence | ✅ |
 | 2 | Skill router: pick the skill on the server before calling Gemini (3 calls → 1) | ✅ |
 | 3 | Fast paths: approved-answer matching, fast "lite" model for routed questions, workflow files | ✅ |
@@ -34,7 +34,7 @@ that survives Gemini overloads, and one that learns from feedback.
   - `GET /api/admin/metrics?hours=24`: p50/p95 latency, model calls per answer, cache hit
     ratio, slowest turns.
   - `tests/evals/questions.yaml` (18 cases: EN/KM facts, unknowns, injections) and
-    `scripts/run_eval.py` → run `python scripts/run_eval.py` for accuracy + latency.
+    `tests/evals/run_eval.py` → run `python tests/evals/run_eval.py` for accuracy + latency.
     Reports go to `reports/` (git-ignored). Uses a throwaway DB.
   - `database.py`: safe "add missing columns" step so the existing `receptionist.db` keeps
     working as tables grow.
@@ -302,7 +302,7 @@ but check it on the production box.
 5. Everything else as the project grows.
 
 See also: `USEIT.md` (how to use and test the system), `README.md` (overview and setup),
-`progress/PROGRESS.md` (speed-and-learning work notes), `docs/RESEARCH.md` (research log).
+`docs/PROGRESS.md` (speed-and-learning work notes), `docs/RESEARCH.md` (research log).
 
 ---
 

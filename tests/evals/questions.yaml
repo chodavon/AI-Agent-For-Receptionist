@@ -1,4 +1,4 @@
-# Evaluation questions for scripts/run_eval.py (runs against the REAL Gemini API; costs tokens).
+# Evaluation questions for tests/evals/run_eval.py (runs against the REAL Gemini API; costs tokens).
 #
 # kind:
 #   fact      - must contain at least one string from expect_any

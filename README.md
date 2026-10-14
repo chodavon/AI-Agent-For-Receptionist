@@ -42,7 +42,7 @@ Generate an admin key with `python -c "import secrets; print(secrets.token_urlsa
 | 503/429 errors broke answers | Keeps answering | Timeout + retry + fallback model, plus a 60 s circuit breaker on 429 |
 | Static answers only | Learns from use | 👍/👎 feedback, learned routing examples, AI drafts for staff, export to `faq.md` |
 
-See `progress/PROGRESS.md` for the full before/after measurements.
+See `docs/PROGRESS.md` for the full before/after measurements.
 
 ## How the agent gets smarter
 
@@ -137,11 +137,9 @@ src/receptionist/
   security/       auth, rate limit, security headers, audit log, PII redaction
 skills/           skill content (editable by staff); workflow.yaml for step-by-step tasks
 web/              chat page + admin page (no inline JS; strict CSP)
-tests/            pytest suite (Gemini is faked; no API key needed)
-tests/evals/      live evaluation set (18 EN+KM questions)
-scripts/          run_eval.py (accuracy + latency against the real model)
-docs/             RESEARCH.md
-progress/         PROGRESS.md + PLAN.md (session continuity)
+tests/            pytest suite, organized by subpackage (Gemini is faked; no API key needed)
+tests/evals/      live evaluation set + run_eval.py (accuracy + latency against the real model)
+docs/             DESIGN, RESEARCH, PLAN, PROGRESS, and improvement roadmap
 ```
 
 ## Security measures

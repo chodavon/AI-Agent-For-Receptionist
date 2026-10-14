@@ -41,10 +41,10 @@ must not drop; the eval in Phase 0 proves it.
   total_ms`, plus token counts from `response.usage_metadata`. Store one row per turn in a new
   `turn_metrics` table, and log it.
 - Turn USEIT.md section 6.2 into `tests/evals/questions.yaml`: 40+ questions in English and
-  Khmer, each with the expected skill and expected facts. Write `scripts/run_eval.py` to score
+  Khmer, each with the expected skill and expected facts. Write `tests/evals/run_eval.py` to score
   accuracy, the routing hit rate and p50/p95 latency.
 - Files: new `src/receptionist/metrics/` (model + service), `agent/client.py` (timers),
-  `scripts/run_eval.py`.
+  `tests/evals/run_eval.py`.
 
 ## Phase 1: Quick wins (no change in how the agent behaves)
 1. **Stream the reply.** Add a `POST /api/chat/stream` endpoint (Server-Sent Events) built on
@@ -206,7 +206,7 @@ Open these spots first. Line numbers are from the current code.
 | **new** `src/receptionist/metrics/` | — | `TurnMetric` table + `record()`: stt/route/llm/tool/tts ms + tokens |
 | `src/receptionist/agent/client.py` | around L147 and the tool loop | Time each call; read `response.usage_metadata` |
 | `src/receptionist/chat/router.py` | `voice()` L61 | Time STT and TTS |
-| **new** `tests/evals/questions.yaml` + `scripts/run_eval.py` | — | Accuracy + p50/p95 before and after each phase |
+| **new** `tests/evals/questions.yaml` + `tests/evals/run_eval.py` | — | Accuracy + p50/p95 before and after each phase |
 
 ### Tests to update or add
 - `tests/conftest.py`: `FakeGemini` also needs `aio.models.generate_content_stream` and `embed_content`.
@@ -220,7 +220,7 @@ Open these spots first. Line numbers are from the current code.
 - `pytest` stays green. Add tests for the router (correct skill for EN and KM questions, falls
   back below the threshold), the cache (cleared on reload), streaming (SSE chunks in order) and
   workflows.
-- Run `scripts/run_eval.py` before and after each phase. Accuracy must not drop; compare p50/p95
+- Run `tests/evals/run_eval.py` before and after each phase. Accuracy must not drop; compare p50/p95
   latency and the router hit rate.
 - Manual: ask a fee question and check that the logged `llm_ms` shows **1 call** where it used
   to be 3. Also check that the first words appear in under 1 s in the browser.
@@ -302,7 +302,7 @@ before the first chat message. Voice is dead.
 If, after real content is in, questions still log `via none` with scores above
 0.65:
 - [ ] Lower `ROUTER_MARGIN` from `0.03` to `0.01` in `.env`.
-- [ ] Re-run `scripts/run_eval.py` and confirm accuracy did not drop.
+- [ ] Re-run `tests/evals/run_eval.py` and confirm accuracy did not drop.
 
 ## A.5 Acceptance test for Appendix A
 - [ ] `turn_metrics` p50 total_ms < 3000 on routed questions.
@@ -361,7 +361,7 @@ tonight's `via none`.
 - [ ] Only call the reranker when the top-2 margin after RRF is thin
       (< 0.05). Skip on obvious wins.
 - [ ] Guard with `ROUTER_RERANK=true` (default off until measured).
-- [ ] Measure with `scripts/run_eval.py`: rerank should raise routing
+- [ ] Measure with `tests/evals/run_eval.py`: rerank should raise routing
       accuracy from 18/19 to 19/19 on the current eval set, with ≤ 300 ms
       extra on reranker-triggered turns.
 
@@ -425,14 +425,14 @@ fused, which rerank candidates were considered.
 
 **Finding:** real-world eval of voice/chat agents uses **simulated users**
 (an LLM playing a parent) that drive multi-turn conversations, not
-single-turn Q&A. Our `scripts/run_eval.py` is one-shot — it misses workflow
+single-turn Q&A. Our `tests/evals/run_eval.py` is one-shot — it misses workflow
 regressions (campus-tour booking), clarification dialogues, and
 barge-in-equivalent interruptions.
 
 **Tasks:**
 - [ ] Extend `tests/evals/` with YAML "scenarios": a list of persona turns
       and an expected end-state (message saved? skill loaded? apology given?).
-- [ ] Add `scripts/run_scenarios.py` that drives the agent with a second
+- [ ] Add `tests/evals/run_scenarios.py` that drives the agent with a second
       Gemini session as the simulated caller, scored by a third LLM-judge
       against the acceptance criteria.
 - [ ] Target scenarios: happy fee question, unknown-topic + fallback,
@@ -518,7 +518,7 @@ to lite, reasoning to full. We have fast/main/fallback, but it is a
 
 ## B.11 Verification for every Appendix-B item
 - `pytest` stays green.
-- `scripts/run_eval.py` and `scripts/run_scenarios.py` (new, B.6) must not
+- `tests/evals/run_eval.py` and `tests/evals/run_scenarios.py` (new, B.6) must not
   regress accuracy and must show the claimed latency win.
 - Appendix A must be fully done first, otherwise free-tier noise hides
   every signal.

@@ -1,8 +1,8 @@
 """Run the evaluation questions against the REAL Gemini API and report accuracy + latency.
 
 Usage (from the project folder, with .venv active and GEMINI_API_KEY in .env):
-    python scripts/run_eval.py
-    python scripts/run_eval.py --only fee-g7-en,adm-documents --delay 2
+    python tests/evals/run_eval.py
+    python tests/evals/run_eval.py --only fee-g7-en,adm-documents --delay 2
 
 It uses a throwaway database, so your real review queue and metrics are not touched.
 Each question runs in a fresh conversation. A JSON report is written to reports/.
@@ -20,7 +20,7 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 # Throwaway database: must be set BEFORE importing the app.
 os.environ["DATABASE_URL"] = f"sqlite:///{Path(tempfile.mkdtemp()) / 'eval.db'}"
 sys.path.insert(0, str(ROOT / "src"))
