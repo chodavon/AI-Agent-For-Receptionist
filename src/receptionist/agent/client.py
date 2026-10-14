@@ -215,6 +215,8 @@ class ReceptionistAgent:
         self.knowledge = None
         # Circuit breaker: model -> time until which it is skipped (after a 429 quota error).
         self._cooldown_until: dict[str, float] = {}
+        self._config_cache: tuple[int, types.GenerateContentConfig] | None = None
+        self._config_fast_cache: tuple[int, types.GenerateContentConfig] | None = None
         # Background summarisation tasks (kept referenced so they aren't garbage-collected).
         self._background: set[asyncio.Task] = set()
         if settings.router_enabled:
@@ -257,10 +259,22 @@ class ReceptionistAgent:
             )
         return self._client
 
-    def _config(self) -> types.GenerateContentConfig:
-        # Deterministic for a given skill set, so Gemini can reuse the cached prefix.
+    def _build_config(
+        self, declarations: list[types.FunctionDeclaration], max_tokens: int
+    ) -> types.GenerateContentConfig:
         system = build_system_prompt(self.settings.school_name, self.skills.index())
-        declarations = [
+        level = THINKING_LEVELS.get(self.settings.thinking_level.strip().lower())
+        return types.GenerateContentConfig(
+            system_instruction=system,
+            tools=[types.Tool(function_declarations=declarations)] if declarations else [],
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+            max_output_tokens=max_tokens,
+            temperature=0.3,
+            thinking_config=types.ThinkingConfig(thinking_level=level) if level else None,
+        )
+
+    def _all_declarations(self) -> list[types.FunctionDeclaration]:
+        return [
             types.FunctionDeclaration(
                 name=t["name"],
                 description=t["description"],
@@ -268,16 +282,22 @@ class ReceptionistAgent:
             )
             for t in tool_definitions(self.skills)
         ]
-        level = THINKING_LEVELS.get(self.settings.thinking_level.strip().lower())
-        return types.GenerateContentConfig(
-            system_instruction=system,
-            tools=[types.Tool(function_declarations=declarations)],
-            # We run tools ourselves (validation + audit), never the SDK.
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-            max_output_tokens=self.settings.llm_max_output_tokens,
-            temperature=0.3,
-            thinking_config=types.ThinkingConfig(thinking_level=level) if level else None,
-        )
+
+    def _config(self, fast_path: bool = False) -> types.GenerateContentConfig:
+        version = self.skills.version
+        if fast_path:
+            if self._config_fast_cache is not None and self._config_fast_cache[0] == version:
+                return self._config_fast_cache[1]
+            all_decls = self._all_declarations()
+            decls = [d for d in all_decls if d.name in ("take_message", "log_unanswered")]
+            cfg = self._build_config(decls, min(self.settings.llm_max_output_tokens, 300))
+            self._config_fast_cache = (version, cfg)
+            return cfg
+        if self._config_cache is not None and self._config_cache[0] == version:
+            return self._config_cache[1]
+        cfg = self._build_config(self._all_declarations(), self.settings.llm_max_output_tokens)
+        self._config_cache = (version, cfg)
+        return cfg
 
     async def _stream_round(
         self, model: str, contents: list[types.Content], config, stats: TurnStats, emitted: list
@@ -390,7 +410,20 @@ class ReceptionistAgent:
         logged_unanswered = False
         if self.router is not None:
             started = now()
-            route = await self.router.route(text, previous_skill=state.last_skill)
+            # Pre-warm the query embedding cache so both tasks reuse the same vector.
+            if self.router.embedder is not None:
+                try:
+                    await self.router._query_vector(text)
+                except Exception:
+                    pass
+            # Run routing and knowledge matching in parallel.
+            route_coro = self.router.route(text, previous_skill=state.last_skill)
+            knowledge_coro = self.knowledge.match(db, text) if self.knowledge else None
+            if knowledge_coro is not None:
+                route, approved = await asyncio.gather(route_coro, knowledge_coro)
+            else:
+                route = await route_coro
+                approved = None
             if route.skill:
                 routed_skill = route.skill
                 stats.path, stats.skill = "routed", route.skill
@@ -403,8 +436,6 @@ class ReceptionistAgent:
                         types.Part.from_text(text=reference_block(route.skill, bundle))
                     )
                     state.skills_in_context.add(route.skill)
-            # Staff-approved answers (from the review queue) are checked on the server too.
-            approved = await self.knowledge.match(db, text) if self.knowledge else None
             if approved is not None:
                 entry, score = approved
                 stats.path = "knowledge"
@@ -427,9 +458,10 @@ class ReceptionistAgent:
         contents = state.contents
         contents.append(types.Content(role="user", parts=user_parts))
         # Answer already attached and no multi-step workflow: the fast model is enough.
-        models = self._models(fast_first=stats.path in ("routed", "knowledge") and not workflow)
+        fast = stats.path in ("routed", "knowledge") and not workflow
+        models = self._models(fast_first=fast)
         ctx = ToolContext(db=db, skills=self.skills, session_id=session_id)
-        config = self._config()
+        config = self._config(fast_path=fast)
         emitted: list[str] = []
 
         for _ in range(self.settings.agent_max_tool_rounds):
