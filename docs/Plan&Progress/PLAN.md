@@ -40,7 +40,7 @@ must not drop; the eval in Phase 0 proves it.
 - Add timing for every stage to each request: `stt_ms, route_ms, llm_ms[round], tool_ms, tts_ms,
   total_ms`, plus token counts from `response.usage_metadata`. Store one row per turn in a new
   `turn_metrics` table, and log it.
-- Turn USEIT.md section 6.2 into `tests/evals/questions.yaml`: 40+ questions in English and
+- Turn docs/GUIDE.md section 6.2 into `tests/evals/questions.yaml`: 40+ questions in English and
   Khmer, each with the expected skill and expected facts. Write `tests/evals/run_eval.py` to score
   accuracy, the routing hit rate and p50/p95 latency.
 - Files: new `src/receptionist/metrics/` (model + service), `agent/client.py` (timers),
@@ -559,3 +559,112 @@ Full source list is in `docs/RESEARCH.md`. Highlights:
 - *OpenAI voice agents guide* — developers.openai.com
 - *Don't Break the Cache: An Evaluation of Prompt Caching for Long-Horizon
   Agentic Tasks* — arXiv 2601.06007
+
+---
+
+# Appendix C: Streaming Speech-to-Text (sherpa-onnx) (2026-10-14)
+
+**Inspiration:** [VoiceStudio](https://github.com/debpalash/VoiceStudio) — a desktop
+voice app whose default engine comes from the k2-fsa family. VoiceStudio itself
+is AGPL-3.0 (viral copyleft) and a desktop-only Electron app, so it cannot be
+embedded here. The transferable idea is its engine family: **sherpa-onnx**, an
+Apache-2.0, ONNX-based STT with real **streaming** recognizers.
+
+**Why change:** today's `faster-whisper` setup is batch-only (user speaks →
+upload → wait 2-5 s for a full transcript), heavy to install (~1.2 GB with
+PyTorch), and has already failed in practice (`[voice]` extras not installed →
+503 on `/api/transcribe`). sherpa-onnx is ~250 MB, needs no PyTorch/CUDA, and
+can emit partial transcripts every ~100 ms while the caller is still speaking.
+
+## C.1 Why sherpa-onnx (vs. the alternatives considered)
+
+| Option | Verdict |
+|---|---|
+| Keep faster-whisper, add client VAD | Minor UX improvement; still batch; doesn't solve install weight |
+| Browser Web Speech API | Free, zero server cost — but Khmer support is Chrome-only and sends audio to Google |
+| Full VoiceStudio-style rewrite | Overkill (voice cloning, dubbing, audiobooks aren't needed) |
+| **sherpa-onnx streaming** | **Chosen** — closest to VoiceStudio's technique family, works for both languages, commercial-safe license |
+
+## C.2 Changes
+
+### C.2.1 Dependency swap
+- [ ] `pyproject.toml` → replace `faster-whisper>=1.0` with
+  `sherpa-onnx>=1.10`, `numpy`, `soundfile`.
+
+### C.2.2 Rewrite STT engine
+**File:** `src/receptionist/voice/stt.py` (full rewrite)
+- [ ] Rename class `WhisperSTT` → `SherpaSTT` (keep old name as alias one release).
+- [ ] `_model(name)` builds `sherpa_onnx.OfflineRecognizer` from ONNX model dir.
+- [ ] `transcribe(bytes, lang_hint)` decodes WebM/Opus → 16 kHz mono PCM via
+  `soundfile` + `numpy`, feeds the recognizer, returns the existing `Transcript`
+  dataclass unchanged.
+- [ ] Preserve `AudioTooLong` using the resampled sample count.
+- Public API stays the same so the chat router does not need to change.
+
+### C.2.3 Streaming WebSocket endpoint
+**File:** `src/receptionist/chat/router.py` (new route)
+- [ ] `WS /api/transcribe/stream` — accepts binary audio frames,
+  wraps `sherpa_onnx.OnlineRecognizer`, emits `{"partial": "..."}` as
+  words are decoded and `{"final": "...", "lang": "en"}` on close.
+- [ ] Keep `POST /api/transcribe` as a batch fallback — both call the same
+  `SherpaSTT` instance.
+
+### C.2.4 Browser streaming client
+**File:** `web/js/app.js` (replace lines 191-253)
+- [ ] Capture 16 kHz mono PCM via `AudioWorklet` (fallback: `ScriptProcessor`).
+- [ ] Open `WebSocket("/api/transcribe/stream")`, send 100 ms chunks as
+  `ArrayBuffer`.
+- [ ] Display partials in the input box as they arrive.
+- [ ] On `pointerup`, close socket, take `final`, call `streamReply()`.
+- [ ] Add a visible "Hold to speak" hint under the mic — the current
+  press-and-hold UX is undiscoverable (we hit this live on 2026-10-14).
+
+### C.2.5 Config
+**Files:** `src/receptionist/config.py`, `.env`
+- [ ] Replace `STT_MODEL_EN` / `STT_MODEL_KM` → `STT_MODEL_EN_PATH` /
+  `STT_MODEL_KM_PATH` (filesystem paths to ONNX model dirs).
+- [ ] Remove `STT_DEVICE`, `STT_COMPUTE_TYPE` (ONNX picks device automatically).
+- [ ] Add `STT_STREAMING_ENABLED=true` (off = batch-only POST path).
+- [ ] Default EN model: `sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17`
+  (~230 MB, multilingual). Downloaded on first `warm_up()` into
+  `data/models/` (git-ignored).
+- [ ] Khmer: user sets `STT_MODEL_KM_PATH` to a Khmer Whisper-ONNX conversion.
+  Document the conversion steps in `docs/GUIDE.md`.
+
+### C.2.6 Tests
+**File:** `tests/voice/test_stt.py`
+- [ ] Fake `sherpa_onnx.OfflineRecognizer` / `OnlineRecognizer` in a conftest
+  fixture (same pattern as the current `faster_whisper` fake).
+- [ ] Add one WebSocket test using FastAPI's
+  `TestClient.websocket_connect("/api/transcribe/stream")`.
+
+### C.2.7 Docs
+- [ ] `docs/GUIDE.md` — update "Voice" section: new model name, no CUDA notes,
+  mention streaming UX, link to ONNX Khmer conversion.
+- [ ] `README.md` — same, drop the CTranslate2 instructions.
+- [ ] `.gitignore` — add `data/models/`.
+
+## C.3 Expected improvements
+
+| Metric | faster-whisper (now) | sherpa-onnx (after) |
+|---|---|---|
+| Install size | ~1.2 GB | ~250 MB |
+| Cold start (`warm_up`) | 3-5 s | <1 s |
+| Time to first word (caller POV) | After full upload (2-5 s) | ~300 ms rolling |
+| Short-clip transcription | 1-2 s | ~200 ms |
+| License | MIT (OK) | Apache-2.0 (also OK, more permissive wheels) |
+
+## C.4 Acceptance test for Appendix C
+- [ ] `pip install -e ".[voice]"` installs cleanly on Windows with no PyTorch.
+- [ ] First browser mic use: partial words visible in the input box within
+  ~500 ms of starting to speak.
+- [ ] "mic release → first reply word" < 2 s on routed queries
+  (`/api/admin/metrics` → `by_path.routed.p50_total_ms`).
+- [ ] Fallback POST `/api/transcribe` still works when WebSocket is disabled.
+- [ ] `pytest tests/voice/ -v` passes.
+
+## C.5 Non-goals for Appendix C
+- Voice cloning / custom TTS voices (VoiceStudio's main feature, not needed).
+- A pluggable multi-engine abstraction — stick with one engine until a second
+  is actually required.
+- Replacing TTS — the browser Web Speech API still handles that side.

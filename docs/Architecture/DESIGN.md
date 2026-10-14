@@ -418,7 +418,7 @@ background tasks, so the first caller doesn't pay cold-start cost.
 - **Commercial Khmer TTS** → implement the `TTS` protocol in `voice/tts.py` (e.g. Google Cloud TTS).
 - **Multi-worker / multi-instance** → move sessions and the rate-limit counter to Redis
   (flagged in `README.md`).
-- **Better migrations** → introduce Alembic (flagged in `need-improve.md`).
+- **Better migrations** → introduce Alembic (flagged in `../ROADMAP.md`).
 
 ---
 
@@ -455,5 +455,5 @@ web/                 index.html, admin.html, js/app.js, js/admin.js, style.css
 skills/              11 skill packs (SKILL.md + reference files)
 ```
 
-Tests live in `tests/` (Gemini is faked, no API key needed). See `README.md` / `USEIT.md` for how
+Tests live in `tests/` (Gemini is faked, no API key needed). See `README.md` / `../GUIDE.md` for how
 to run and operate it, and `docs/RESEARCH.md` for background research.

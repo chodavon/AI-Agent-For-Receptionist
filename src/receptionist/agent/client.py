@@ -26,8 +26,10 @@ from google.genai import types
 from sqlalchemy.orm import Session
 
 from receptionist.agent import guardrails, memory
+from receptionist.agent.prompt_cache import PromptCacheRegistry
 from receptionist.agent.prompts import build_system_prompt
 from receptionist.agent.tools import ToolContext, run_tool, tool_definitions
+from receptionist.cache.service import AnswerCache
 from receptionist.config import Settings
 from receptionist.database import SessionLocal
 from receptionist.learning import service as learning
@@ -213,6 +215,12 @@ class ReceptionistAgent:
         self._client = client
         self.router = None
         self.knowledge = None
+        self.answer_cache: AnswerCache | None = None
+        self.prompt_cache: PromptCacheRegistry | None = None
+        if settings.prompt_cache_enabled:
+            self.prompt_cache = PromptCacheRegistry(
+                lambda: self.client, ttl_seconds=settings.prompt_cache_ttl_seconds
+            )
         # Circuit breaker: model -> time until which it is skipped (after a 429 quota error).
         self._cooldown_until: dict[str, float] = {}
         self._config_cache: tuple[int, types.GenerateContentConfig] | None = None
@@ -234,6 +242,12 @@ class ReceptionistAgent:
             self.knowledge = KnowledgeMatcher(
                 self.router, settings.knowledge_threshold, settings.knowledge_lexical_threshold
             )
+            if settings.answer_cache_enabled and embedder is not None:
+                self.answer_cache = AnswerCache(
+                    embedder,
+                    threshold=settings.answer_cache_threshold,
+                    max_entries=settings.answer_cache_max_entries,
+                )
 
     @property
     def client(self):
@@ -298,6 +312,18 @@ class ReceptionistAgent:
         cfg = self._build_config(self._all_declarations(), self.settings.llm_max_output_tokens)
         self._config_cache = (version, cfg)
         return cfg
+
+    def _cached_config(self, cache_name: str, max_tokens: int) -> types.GenerateContentConfig:
+        """A GenerateContentConfig that uses an explicit Gemini cache. The cache already
+        holds system_instruction + tools, so neither is passed here."""
+        level = THINKING_LEVELS.get(self.settings.thinking_level.strip().lower())
+        return types.GenerateContentConfig(
+            cached_content=cache_name,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+            max_output_tokens=max_tokens,
+            temperature=0.3,
+            thinking_config=types.ThinkingConfig(thinking_level=level) if level else None,
+        )
 
     async def _stream_round(
         self, model: str, contents: list[types.Content], config, stats: TurnStats, emitted: list
@@ -408,14 +434,31 @@ class ReceptionistAgent:
         user_parts, workflow, routed_skill = [], False, None
         loaded_skills: list[str] = []
         logged_unanswered = False
+        qvec = None
         if self.router is not None:
             started = now()
-            # Pre-warm the query embedding cache so both tasks reuse the same vector.
+            # Pre-warm the query embedding cache so router, knowledge and cache reuse it.
             if self.router.embedder is not None:
                 try:
-                    await self.router._query_vector(text)
+                    qvec = await self.router._query_vector(text)
                 except Exception:
-                    pass
+                    qvec = None
+            # Semantic answer cache: skip the LLM entirely on a near-identical repeat.
+            if self.answer_cache is not None and qvec is not None:
+                cached = await self.answer_cache.lookup(text, qvec)
+                if cached is not None:
+                    stats.path = "cache"
+                    stats.outcome = "cache_hit"
+                    stats.route_ms = ms_since(started)
+                    yield cached.answer
+                    yield AgentReply(
+                        cached.answer,
+                        cached.lang,
+                        session_reset=reset,
+                        stats=stats,
+                        question=text,
+                    )
+                    return
             # Run routing and knowledge matching in parallel.
             route_coro = self.router.route(text, previous_skill=state.last_skill)
             knowledge_coro = self.knowledge.match(db, text) if self.knowledge else None
@@ -462,6 +505,33 @@ class ReceptionistAgent:
         models = self._models(fast_first=fast)
         ctx = ToolContext(db=db, skills=self.skills, session_id=session_id)
         config = self._config(fast_path=fast)
+        # Explicit prompt caching (opt-in). Only on the pure routed/fast path and only when
+        # the skill bundle was added this turn. If cache creation fails, we silently fall
+        # back to the already-built config.
+        if (
+            self.prompt_cache is not None
+            and fast
+            and routed_skill
+            and routed_skill in state.skills_in_context
+            and models
+        ):
+            system = build_system_prompt(self.settings.school_name, self.skills.index())
+            cache_name = await self.prompt_cache.get_or_create(
+                model=models[0],
+                skill=routed_skill,
+                fast_path=True,
+                skills_version=self.skills.version,
+                system_instruction=system,
+                tools=config.tools or [],
+                contents=[types.Content(role="user", parts=user_parts[:-1])],
+            )
+            if cache_name:
+                # Caller text alone — the rest is in the cache.
+                contents[-1] = types.Content(role="user", parts=[user_parts[-1]])
+                config = self._cached_config(
+                    cache_name, min(self.settings.llm_max_output_tokens, 300)
+                )
+                models = [models[0]]  # cache is model-specific; disable fallback
         emitted: list[str] = []
 
         for _ in range(self.settings.agent_max_tool_rounds):
@@ -546,9 +616,24 @@ class ReceptionistAgent:
             task = asyncio.create_task(self._summarize(session_id, state.turns))
             self._background.add(task)
             task.add_done_callback(self._background.discard)
+        reply_lang = guardrails.detect_lang(reply_text)
+        # Cache this answer only when it came from facts: routed or knowledge path,
+        # no tool errors, no handoff. Tool-loop replies may be unknowns we don't want to replay.
+        if (
+            self.answer_cache is not None
+            and not logged_unanswered
+            and stats.path in ("routed", "knowledge")
+            and reply_text != SORRY["en"]
+            and reply_text != SORRY["km"]
+        ):
+            task = asyncio.create_task(
+                self.answer_cache.store(text, reply_text, reply_lang, qvec)
+            )
+            self._background.add(task)
+            task.add_done_callback(self._background.discard)
         yield AgentReply(
             reply_text,
-            guardrails.detect_lang(reply_text),
+            reply_lang,
             session_reset=reset,
             stats=stats,
             question=text,

@@ -3,6 +3,7 @@
 import logging
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from pathlib import Path
 
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
@@ -23,6 +24,9 @@ def utcnow() -> datetime:
 
 def make_engine(url: str) -> Engine:
     connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
+    if url.startswith("sqlite:///") and not url.startswith("sqlite:////"):
+        db_path = Path(url.removeprefix("sqlite:///"))
+        db_path.parent.mkdir(parents=True, exist_ok=True)
     return create_engine(url, connect_args=connect_args)
 
 

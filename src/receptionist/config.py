@@ -43,11 +43,21 @@ class Settings(BaseSettings):
     # Staff-approved answers are checked before calling the LLM.
     knowledge_threshold: float = Field(default=0.85, ge=0, le=1)  # embedding similarity
     knowledge_lexical_threshold: float = Field(default=0.6, ge=0, le=1)  # keyword overlap
+    # Semantic answer cache: return a recent answer instantly when the question matches.
+    # Flushes on skills/knowledge/routing-example changes.
+    answer_cache_enabled: bool = True
+    answer_cache_threshold: float = Field(default=0.95, ge=0, le=1)
+    answer_cache_max_entries: int = Field(default=500, ge=10, le=10000)
+    # Explicit Gemini prompt caching (`client.caches.create`). Opt-in: needs skill bundles
+    # large enough to meet the model's minimum cache size (~1024 tokens for Flash).
+    # Deleted on skills reload; TTL on the Gemini side guards against stale caches.
+    prompt_cache_enabled: bool = False
+    prompt_cache_ttl_seconds: int = Field(default=3600, ge=60)
 
     # App
     school_name: str = "Example Academy"
     environment: str = "development"
-    database_url: str = "sqlite:///./receptionist.db"
+    database_url: str = "sqlite:///./data/receptionist.db"
     skills_dir: Path = Path("./skills")
     web_dir: Path = Path("./web")
     cors_origins: str = "http://localhost:8000"

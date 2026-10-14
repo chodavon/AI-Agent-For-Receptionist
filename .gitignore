@@ -15,6 +15,7 @@ venv/
 # Data & models
 *.db
 *.db-journal
+data/
 models/
 uploads/
 

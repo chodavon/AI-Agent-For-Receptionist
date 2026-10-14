@@ -6,7 +6,7 @@
 > Nothing has been committed to git. You commit it yourself (see section 7).
 
 The full plan this work follows is in **[PLAN.md](PLAN.md)**, in this same folder.
-`need-improve.md` also has a short progress table.
+`../ROADMAP.md` also has a short progress table.
 
 ---
 
@@ -45,7 +45,7 @@ private.
 | 3. Fast paths | Approved answers matched quickly; fast "lite" model for simple answers; `workflow.yaml` for multi-step tasks; fallback model when one is overloaded | ✅ Done |
 | 4. Conversation memory | Older turns are summarised instead of wiped; follow-up questions keep the same skill | ✅ Done |
 | 5. Learning loop | 👍/👎 buttons, learned routing examples, "Draft with AI" for staff, "Move to skill faq.md", speed panel in admin | ✅ Code done and checked live. Remaining: run the eval and update docs |
-| 6. Infrastructure | Redis, several workers, Gemini context caching, server region | ⏳ Not started. Only needs writing up in `need-improve.md` (not needed at your current traffic) |
+| 6. Infrastructure | Redis, several workers, Gemini context caching, server region | ⏳ Not started. Only needs writing up in `../ROADMAP.md` (not needed at your current traffic) |
 
 ---
 
@@ -130,8 +130,8 @@ How it copes with failures:
 | `.env.example` | Documents all the new settings |
 | `.gitignore` | Adds `reports/` |
 | `pyproject.toml` | Dependency and tool settings |
-| `need-improve.md` | Progress table and log (always rewritten as a whole file) |
-| `README.md`, `USEIT.md` | Changed in earlier sessions (Gemini port). **Not yet updated for these new features** (still to do) |
+| `docs/ROADMAP.md` (was `need-improve.md`) | Progress table and log (always rewritten as a whole file) |
+| `README.md`, `docs/GUIDE.md` (was `USEIT.md`) | Updated 2026-10-14 for Phase 5 features (streaming, 👍/👎, admin tools, eval, new .env) |
 
 ---
 
@@ -256,19 +256,14 @@ into chat earlier, so please **rotate both** if you haven't already.
 2. **Run the eval** (optional, uses quota):
    `PYTHONIOENCODING=utf-8 .venv/Scripts/python tests/evals/run_eval.py --delay 3`, then compare
    accuracy and speed with the numbers in section 1.
-3. **Update `need-improve.md`** (whole-file rewrite): mark Phase 5 ✅ and add a log line.
-4. **Phase 6**: write up the infrastructure items in `need-improve.md`:
+3. **Update `docs/ROADMAP.md`** (whole-file rewrite): mark Phase 5 ✅ and add a log line.
+4. **Phase 6**: write up the infrastructure items in `docs/ROADMAP.md`:
    - Redis for sessions, the rate limiter and the cache, with several uvicorn workers
    - explicit Gemini context caching (`client.caches.create`) once the skills get large
    - hosting in a region close to Gemini
 
    It isn't needed for one school's traffic.
-5. **Update `USEIT.md` and `README.md`** with:
-   - streaming, the 👍/👎 buttons and `/api/transcribe`
-   - the new admin features: Draft with AI, Move to faq.md, the speed panel and routing examples
-   - the eval script
-   - the new `.env` settings
-   - the free-tier note
+5. ~~Update `docs/GUIDE.md` and `README.md`~~ — ✅ Done 2026-10-14.
 6. Run pytest, ruff and bandit again, then **commit and push by hand** (section 7).
 
 To resume with Claude, say: *"Read docs/Plan&Progress/PLAN.md and docs/Plan&Progress/PROGRESS.md, then continue from step 2."*
