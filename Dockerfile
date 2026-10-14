@@ -1,3 +1,24 @@
+# ---- Frontend ---------------------------------------------------------------
+# AICA's chat UI is a React app. It is compiled in this stage and only the
+# result is carried into the image below; `web/` is build output, not source.
+# The workdir mirrors the repo layout so `outDir: "../web"` lands on /app/web.
+FROM node:24-alpine AS frontend
+
+WORKDIR /app/frontend
+
+# Dependencies first, so editing UI code does not re-run npm ci.
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+# Explicit copies rather than `COPY frontend/ ./`: that would drag a host
+# node_modules (wrong platform) over the freshly installed one.
+COPY frontend/index.html frontend/tsconfig.json frontend/vite.config.ts ./
+COPY frontend/src ./src
+COPY frontend/public ./public
+
+RUN npm run build
+
+# ---- Application ------------------------------------------------------------
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
@@ -10,7 +31,7 @@ COPY src ./src
 RUN pip install ".[voice]"
 
 COPY skills ./skills
-COPY web ./web
+COPY --from=frontend /app/web ./web
 
 # Run as an unprivileged user.
 RUN useradd --create-home --uid 10001 app && mkdir -p /app/data /app/models \

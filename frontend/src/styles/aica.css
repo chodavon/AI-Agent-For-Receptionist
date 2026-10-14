@@ -1,0 +1,540 @@
+/* ==========================================================================
+   AICA — the front desk for Academy School.
+   Self-hosted stylesheet: no inline styles, no external fonts, so it stays
+   inside the app's Content-Security-Policy and works offline on the school
+   network. The staff admin page keeps its own style.css.
+   ========================================================================== */
+
+/* ---- 1. Tokens ---------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+
+  --bg:        #0A101E;
+  --surface:   #121A2C;
+  --surface-hi:#1A2440;
+  --text:      #E8EEFA;
+  --muted:     #93A4C4;
+  --line:      rgba(147, 164, 196, .20);
+
+  --brand:     #35D0A5;   /* AICA */
+  --call:      #EFB75A;   /* the caller */
+  --danger:    #FF8B7A;
+  --on-brand:  #04140F;
+  --on-call:   #1A1204;
+  --focus:     #EFB75A;
+
+  --glow-a:    rgba(53, 208, 165, .15);
+  --glow-b:    rgba(239, 183, 90, .10);
+  --shadow:    0 26px 60px -30px rgba(0, 0, 0, .95);
+  --shadow-sm: 0 12px 26px -20px rgba(0, 0, 0, .90);
+
+  --r: 16px;
+
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+               "Noto Sans", "Noto Sans Khmer", "Khmer UI", "Leelawadee UI",
+               Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Bahnschrift", "Segoe UI Variable Display", "Segoe UI Semibold",
+               "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, "SF Mono", "JetBrains Mono",
+               ui-monospace, monospace;
+}
+
+/* Daylight: a cool paper desk, not the cream-and-serif cliché. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    --bg:        #F1F4FA;
+    --surface:   #FFFFFF;
+    --surface-hi:#E9EEF8;
+    --text:      #0E1526;
+    --muted:     #4E5B79;
+    --line:      rgba(18, 32, 66, .15);
+
+    --brand:     #0B7A5C;
+    --call:      #8A5A00;
+    --danger:    #B3261E;
+    --on-brand:  #FFFFFF;
+    --on-call:   #FFF8EA;
+    --focus:     #8A5A00;
+
+    --glow-a:    rgba(11, 122, 92, .10);
+    --glow-b:    rgba(138, 90, 0, .07);
+    --shadow:    0 26px 60px -34px rgba(18, 32, 66, .35);
+    --shadow-sm: 0 12px 26px -22px rgba(18, 32, 66, .30);
+  }
+}
+
+/* ---- 2. Base ------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background:
+    radial-gradient(1100px 620px at 10% -12%, var(--glow-a), transparent 62%),
+    radial-gradient(900px 520px at 105% 108%, var(--glow-b), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  display: flex;
+  justify-content: center;
+}
+
+::selection { background: color-mix(in srgb, var(--brand) 38%, transparent); }
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  padding: 0; overflow: hidden; clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
+
+/* ---- 3. App shell ------------------------------------------------------- */
+.shell {
+  position: relative;
+  z-index: 1;          /* sits above the drifting aurora layer (section 14) */
+  width: 100%;
+  max-width: 880px;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(16px, 2.6vw, 28px) clamp(16px, 3.2vw, 28px);
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* ---- 4. Masthead -------------------------------------------------------- */
+.desk {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 20px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.brand-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.3rem, 3.6vw, 1.55rem);
+  letter-spacing: .2em;
+  line-height: 1;
+  margin-right: -.2em;
+}
+
+.tagline {
+  font-family: var(--font-mono);
+  font-size: .67rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---- 5. The robot mascot -------------------------------------------------
+   AICA's face. It replaced the listening orb: same job (show what the desk is
+   doing) but it has a personality. All of its styling and motion lives beside
+   the component, in src/components/Robot.css — this is only the slot it sits
+   in, sized to the artwork's 72x64 viewBox.                               */
+.robot-slot {
+  flex: none;
+  width: 56px;
+  height: 50px;   /* 56 * (64 / 72) keeps the mascot's aspect ratio */
+}
+
+/* ---- 6. Language picker ------------------------------------------------- */
+.lang {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: .67rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lang select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 44px;
+  padding: 0 34px 0 14px;
+  font-family: var(--font-body);
+  font-size: .85rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* Chevron drawn as a mask so it inherits --muted in both themes. */
+.lang::after {
+  content: "";
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 9px;
+  height: 6px;
+  transform: translateY(-50%);
+  background: var(--muted);
+  pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+/* ---- 7. Privacy note ---------------------------------------------------- */
+.note {
+  flex: none;
+  margin: 0;
+  max-width: 66ch;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+/* ---- 8. Transcript ------------------------------------------------------ */
+.log {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  list-style: none;
+  margin: 0;
+  padding: 2px 4px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.log::-webkit-scrollbar { width: 10px; }
+.log::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+
+.log li {
+  max-width: min(86%, 68ch);
+  padding: 12px 16px;
+  font-size: .975rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.log li.bot {
+  align-self: flex-start;
+  background: var(--surface);
+  border-left: 2px solid var(--brand);
+  border-top-left-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.log li.user {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--call) 13%, var(--surface));
+  border-right: 2px solid color-mix(in srgb, var(--call) 70%, transparent);
+  border-top-right-radius: 8px;
+}
+
+/* The note above a bubble ("🎤 voice message"). */
+.log li small {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: .65rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---- 9. Composer -------------------------------------------------------- */
+.composer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.composer:focus-within {
+  border-color: color-mix(in srgb, var(--brand) 60%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--brand) 20%, transparent),
+    var(--shadow);
+}
+
+.composer input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 8px 0 14px;
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  outline: none;           /* focus is shown on .composer:focus-within instead */
+  caret-color: var(--brand);
+}
+.composer input::placeholder { color: var(--muted); }
+
+.composer button {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  cursor: pointer;
+  transition: transform .16s ease, background-color .16s ease,
+              border-color .16s ease, opacity .16s ease, box-shadow .22s ease;
+}
+
+.composer button[type="submit"] {
+  padding: 0 20px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+#mic {
+  width: 46px;
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand) 42%, transparent);
+}
+#mic svg { width: 19px; height: 19px; display: block; }
+
+#mic.recording {
+  color: var(--on-call);
+  background: var(--call);
+  border-color: var(--call);
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--call) 16%, transparent); }
+}
+
+.composer button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+@media (hover: hover) {
+  .composer button:not(:disabled):hover { transform: translateY(-1px); }
+  .composer button[type="submit"]:not(:disabled):hover {
+    background: color-mix(in srgb, var(--brand) 86%, var(--text));
+  }
+  #mic:not(.recording):not(:disabled):hover {
+    background: color-mix(in srgb, var(--brand) 24%, transparent);
+  }
+}
+
+/* ---- 10. Status line ---------------------------------------------------- */
+.status {
+  flex: none;
+  margin: 0;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+
+.status::before {
+  content: "";
+  display: none;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--brand) 70%, transparent);
+  animation: blink 1.5s ease-in-out infinite;
+}
+.status:not(:empty)::before { display: block; }
+
+.status.error { color: var(--danger); }
+.status.error::before { background: var(--danger); box-shadow: none; animation: none; }
+
+@keyframes blink { 50% { opacity: .3; } }
+
+/* ---- 11. Rating chips (rendered by Bubble.tsx) -------------------------- */
+.feedback {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+.feedback button.secondary {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--surface-hi);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.feedback button:disabled { opacity: .45; cursor: not-allowed; }
+
+@media (hover: hover) {
+  .feedback button.secondary:not(:disabled):hover {
+    border-color: color-mix(in srgb, var(--brand) 60%, transparent);
+  }
+}
+
+/* ---- 12. Motion ---------------------------------------------------------
+   No fill-mode: the resting state is the visible one, so a reveal that never
+   runs (background tab, animation-blocking extension) can never leave the
+   transcript or the composer invisible. The composer itself is never animated
+   — it is the primary affordance and must be usable the instant it paints. */
+@media (prefers-reduced-motion: no-preference) {
+  .desk   { animation: rise .5s cubic-bezier(.2, .7, .3, 1); }
+  .log li { animation: rise .32s cubic-bezier(.2, .7, .3, 1); }
+  .log    { scroll-behavior: smooth; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  /* The mascot's poses are parked at rest by the rule above; Robot.css resets
+     the eyelids so it reads as awake rather than asleep. */
+  .log { scroll-behavior: auto; }
+}
+
+/* ---- 13. Small screens -------------------------------------------------- */
+@media (max-width: 560px) {
+  .shell { gap: 12px; }
+  .wordmark { letter-spacing: .15em; }
+  .log li { max-width: 92%; padding: 11px 14px; font-size: .95rem; }
+  .composer button[type="submit"] { padding: 0 16px; }
+}
+
+@media (max-width: 380px) {
+  .desk { gap: 10px; }
+  .tagline { font-size: .62rem; letter-spacing: .1em; }
+  .log li { max-width: 96%; }
+}
+
+/* ---- 14. Life: motion tied to what the desk is doing --------------------
+   Every animation below is inside a prefers-reduced-motion: no-preference gate
+   and has a visible resting state (no fill-mode), so a blocked or skipped
+   animation can never leave content hidden. The global .001ms override in
+   section 12 neutralises all of it when reduced motion is requested.         */
+
+/* Type to wake the desk: the composer lights up the moment there is a real
+   message. :placeholder-shown tracks the live value, so this also settles back
+   down when the Composer clears the field after sending. */
+.composer:has(#text:not(:placeholder-shown)) {
+  border-color: color-mix(in srgb, var(--brand) 42%, transparent);
+}
+
+.composer:has(#text:not(:placeholder-shown)) button[type="submit"] {
+  box-shadow: 0 0 24px -6px color-mix(in srgb, var(--brand) 65%, transparent);
+}
+
+/* Position anchor for the streaming light + caret below. */
+.log li.bot { position: relative; }
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* A slow aurora drifts behind the transcript. Purely additive: it layers over
+     the static background glows, so if it never runs the page looks unchanged. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(760px 460px at 50% 50%, var(--glow-a), transparent 70%);
+    animation: aurora 40s ease-in-out infinite alternate;
+  }
+
+  @keyframes aurora {
+    from { transform: translate3d(-14%, -7%, 0) scale(.90); opacity: .55; }
+    to   { transform: translate3d(15%, 9%, 0) scale(1.18); opacity: .90; }
+  }
+
+  /* Rating chips pop in as they appear. */
+  .feedback button { animation: chip .34s cubic-bezier(.2, 1.5, .4, 1); }
+  .feedback button:nth-child(2) { animation-delay: .08s; }
+
+  @keyframes chip { from { transform: scale(.72); opacity: .4; } }
+
+  /* A reply that is still arriving (.streaming comes from the Turn state):
+     light runs down its jade edge and a caret waits at the end of the text. */
+  .log li.bot.streaming::before {
+    content: "";
+    position: absolute;
+    left: -1px;
+    width: 2px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--brand);
+    box-shadow: 0 0 12px var(--brand);
+    animation: travel 1.6s ease-in-out infinite;
+  }
+
+  @keyframes travel {
+    0%   { top: 6px; opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { top: calc(100% - 30px); opacity: 0; }
+  }
+
+  .log li.bot.streaming::after {
+    content: "";
+    display: inline-block;
+    width: .5em;
+    height: 1em;
+    margin-left: .16em;
+    vertical-align: -.15em;
+    border-radius: 1px;
+    background: var(--brand);
+    animation: caret 1.05s steps(2, jump-none) infinite;
+  }
+
+  @keyframes caret { 50% { opacity: 0; } }
+}

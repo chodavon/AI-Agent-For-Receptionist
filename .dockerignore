@@ -1,0 +1,26 @@
+# Keep the build context small and stop host artifacts leaking into the image.
+# (The frontend stage copies frontend/ paths explicitly, so this is a safety
+# net: a host node_modules would otherwise shadow the Linux install.)
+.git/
+.venv/
+frontend/node_modules/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Local data and secrets, never needed to build
+*.db
+*.db-journal
+.env
+.env.*
+uploads/
+models/
+
+# Build output — the frontend stage regenerates it
+web/
+
+# Docs and tests are not needed in the runtime image
+docs/
+tests/

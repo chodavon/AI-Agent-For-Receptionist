@@ -1,0 +1,185 @@
+/* ==========================================================================
+   AICA's robot mascot.
+   Shape and colour come from the theme tokens; every pose is driven by
+   `data-state` on the root svg (idle | listening | thinking | speaking).
+   React never animates anything itself — it only reports the state.
+   ========================================================================== */
+
+.robot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+
+  --robot-shell: #1f2942;
+  --robot-edge: rgba(147, 164, 196, 0.25);
+  --robot-visor: #0b1220;   /* the face screen stays dark in both themes */
+  --robot-eye: var(--brand);
+  --robot-light: var(--brand);
+}
+
+@media (prefers-color-scheme: light) {
+  .robot {
+    --robot-shell: #e9eef8;
+    --robot-edge: rgba(18, 32, 66, 0.16);
+    --robot-visor: #0b1220;
+    --robot-eye: #2fd3a6;   /* brighter jade so it reads on the dark visor */
+    --robot-light: #0b7a5c;
+  }
+}
+
+/* ---- Parts -------------------------------------------------------------- */
+.robot__head { fill: var(--robot-shell); stroke: var(--robot-edge); stroke-width: 1.1; }
+.robot__stalk { fill: var(--robot-shell); stroke: var(--robot-edge); stroke-width: 0.9; }
+.robot__visor { fill: var(--robot-visor); }
+.robot__ear { fill: var(--robot-shell); stroke: var(--robot-edge); stroke-width: 1; }
+
+.robot__bulb {
+  fill: var(--robot-light);
+  filter: drop-shadow(0 0 5px var(--robot-light));
+}
+.robot__bulb-core { fill: #fff; opacity: 0.85; }
+.robot__ear-dot { fill: var(--robot-light); }
+
+.robot__pupil {
+  fill: var(--robot-eye);
+  filter: drop-shadow(0 0 4px var(--robot-eye));
+}
+.robot__glint { fill: #fff; opacity: 0.9; }
+
+/* Eyelids are painted in the visor colour, so scaling them up "closes" the eye. */
+.robot__lid {
+  fill: var(--robot-visor);
+  transform-box: fill-box;
+  transform-origin: center top;
+  transform: scaleY(0);   /* resting pose: eyes open */
+}
+
+.robot__scan { fill: var(--robot-eye); opacity: 0; }
+.robot__mouth rect {
+  fill: var(--robot-eye);
+  opacity: 0.6;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.robot__eyes,
+.robot__iris,
+.robot__face,
+.robot__bob,
+.robot__bulb,
+.robot__ear-dot,
+.robot__ear {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ---- Motion -------------------------------------------------------------
+   Gated, and every pose has a visible resting state, so a blocked animation
+   can never leave the robot invisible or mid-blink. Section 12 of aica.css
+   neutralises all of this when the caller prefers reduced motion.           */
+@media (prefers-reduced-motion: no-preference) {
+
+  /* Idle: the desk is awake. Slow float, slow antenna pulse, periodic blink. */
+  .robot__bob { animation: robot-bob 3.6s ease-in-out infinite alternate; }
+  .robot__bulb { animation: robot-bulb 2.8s ease-in-out infinite; }
+  .robot__lid { animation: robot-blink 6s ease-in-out infinite; }
+
+  @keyframes robot-bob {
+    from { transform: translateY(0.9px); }
+    to { transform: translateY(-1.4px); }
+  }
+
+  @keyframes robot-bulb {
+    0%, 100% { opacity: 0.5; transform: scale(0.84); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+
+  /* Mostly open, with a quick double flick of the lids. */
+  @keyframes robot-blink {
+    0%, 91%, 100% { transform: scaleY(0); }
+    93.5%, 96.5% { transform: scaleY(1); }
+  }
+
+  /* Listening: the caller is talking. Antenna and pods go gold and alert, the
+     eyes widen, and the head cocks slightly toward the speaker. */
+  [data-state="listening"] { --robot-light: var(--call); }
+
+  [data-state="listening"] .robot__bulb,
+  [data-state="listening"] .robot__ear-dot {
+    animation: robot-alert 0.9s ease-in-out infinite;
+  }
+  [data-state="listening"] .robot__ear { animation: robot-hum 0.9s ease-in-out infinite; }
+  [data-state="listening"] .robot__iris { animation: robot-widen 1.2s ease-in-out infinite; }
+  [data-state="listening"] .robot__lid { animation: none; }  /* keep eyes wide open */
+  [data-state="listening"] .robot__face { animation: robot-cock 1.8s ease-in-out infinite; }
+  [data-state="listening"] .robot__bob { animation: none; }
+
+  @keyframes robot-alert {
+    0%, 100% { opacity: 0.45; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  @keyframes robot-hum {
+    50% { transform: scale(1.08); }
+  }
+
+  @keyframes robot-widen {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.16); }
+  }
+
+  @keyframes robot-cock {
+    0%, 100% { transform: rotate(-3.5deg); }
+    50% { transform: rotate(2deg); }
+  }
+
+  /* Thinking: eyes search the visor while a scan line sweeps it. */
+  [data-state="thinking"] .robot__eyes { animation: robot-search 2.6s ease-in-out infinite; }
+  [data-state="thinking"] .robot__scan { animation: robot-scan 1.8s ease-in-out infinite; }
+  [data-state="thinking"] .robot__bulb { animation: robot-bulb 1.4s ease-in-out infinite; }
+  [data-state="thinking"] .robot__mouth rect { animation: robot-talk 0.9s ease-in-out infinite; }
+
+  @keyframes robot-search {
+    0%, 100% { transform: translateX(0) translateY(0.6px); }
+    30% { transform: translateX(-2.4px) translateY(-0.4px); }
+    70% { transform: translateX(2.4px) translateY(-0.4px); }
+  }
+
+  @keyframes robot-scan {
+    0% { transform: translateY(0); opacity: 0; }
+    18% { opacity: 0.85; }
+    82% { opacity: 0.85; }
+    100% { transform: translateY(19px); opacity: 0; }
+  }
+
+  /* Speaking: the grille beats in a wave and the eyes pulse with the speech.
+     The lids deliberately stay open — a lid dropping from above reads as
+     drowsy rather than happy. */
+  [data-state="speaking"] .robot__mouth rect { animation: robot-talk 0.42s ease-in-out infinite; }
+  [data-state="speaking"] .robot__iris { animation: robot-pulse 0.62s ease-in-out infinite; }
+  [data-state="speaking"] .robot__lid { animation: none; }
+  [data-state="speaking"] .robot__bulb { animation: robot-bulb 0.7s ease-in-out infinite; }
+
+  [data-state="speaking"] .robot__mouth rect:nth-child(2) { animation-delay: 0.1s; }
+  [data-state="speaking"] .robot__mouth rect:nth-child(3) { animation-delay: 0.2s; }
+  [data-state="speaking"] .robot__mouth rect:nth-child(4) { animation-delay: 0.3s; }
+
+  @keyframes robot-talk {
+    0%, 100% { transform: scaleY(0.42); opacity: 0.5; }
+    50% { transform: scaleY(1); opacity: 0.95; }
+  }
+
+  @keyframes robot-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.07); }
+  }
+}
+
+/* Section 12 sets animation-duration to .001ms globally under reduced motion,
+   which parks every pose at its resting state. The lids need to read as open
+   rather than closed, so they are reset explicitly. */
+@media (prefers-reduced-motion: reduce) {
+  .robot__lid { transform: scaleY(0); }
+  .robot__scan { opacity: 0; }
+}
